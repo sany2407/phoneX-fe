@@ -108,13 +108,15 @@ export default function HomePage() {
               <DeviceCard key={model.id} model={model} />
             ))}
         </div>
-        <p className="mt-6 flex items-center gap-2 rounded-lg bg-secondary px-4 py-3 text-sm text-muted-foreground">
-          <Search className="size-4 shrink-0 text-primary" aria-hidden="true" />
-          Can&apos;t see your device? Use the{" "}
-          <Link href="#find-device" className="font-semibold text-primary hover:underline">
-            device finder
-          </Link>{" "}
-          — we add new models every month.
+        <p className="mt-6 flex items-start gap-2 rounded-lg bg-secondary px-4 py-3 text-sm text-pretty text-muted-foreground">
+          <Search className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span>
+            Can&apos;t see your device? Use the{" "}
+            <Link href="#find-device" className="font-semibold text-primary hover:underline">
+              device finder
+            </Link>{" "}
+            — we add new models every month.
+          </span>
         </p>
       </section>
 

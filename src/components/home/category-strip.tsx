@@ -24,16 +24,16 @@ export function CategoryStrip() {
         </Link>
       </div>
 
-      <ul className="-mx-5 mt-8 flex snap-x gap-4 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-5">
+      <ul className="mt-8 grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {categories.map((cat) => {
           const count = getSkins({ categoryIds: [cat.id] }).length;
           return (
-            <li key={cat.id} className="w-[150px] shrink-0 snap-start md:w-auto">
+            <li key={cat.id} className="min-w-0">
               <Link
                 href={`/designs/${cat.slug}`}
                 className="group block overflow-hidden rounded-xl border transition-shadow duration-300 ease-out hover:shadow-card-hover"
               >
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className="aspect-4/3 overflow-hidden">
                   <div className="h-full w-full transition-transform duration-300 ease-out group-hover:scale-[1.03]">
                     <SkinArt pattern={cat.pattern} colors={cat.colors} />
                   </div>

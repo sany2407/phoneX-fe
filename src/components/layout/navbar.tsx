@@ -18,7 +18,7 @@ import { Logo } from "@/components/layout/logo";
 import { SearchDialog } from "@/components/layout/search-dialog";
 import { useCart } from "@/lib/stores/cart-store";
 import { useAuth } from "@/lib/stores/auth-store";
-import { useWishlist } from "@/lib/stores/wishlist-store";
+import { useLike } from "@/lib/stores/like-store";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -45,14 +45,16 @@ export function Navbar() {
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const wishlistCount = useWishlist((s) => s.slugs.length);
+  const liked = useLike((s) => s.liked);
+  const likeCount = useLike((s) => s.count);
+  const toggleLike = useLike((s) => s.toggle);
   const user = useAuth((s) => s.user);
   const signOut = useAuth((s) => s.signOut);
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 min-w-0 overflow-x-clip">
       <div className="bg-foreground px-4 py-2 text-center">
-        <p className="text-xs font-medium tracking-wide text-background/90">
+        <p className="text-pretty text-xs font-medium tracking-wide text-background/90">
           Free shipping over ₹499 · Extra 10% off with code{" "}
           <span className="font-bold">PHONE10</span>
         </p>
@@ -60,7 +62,7 @@ export function Navbar() {
       <div className="border-b bg-background/90 backdrop-blur-md">
         <nav
           aria-label="Main navigation"
-          className="container-x flex h-16 items-center gap-6"
+          className="container-x flex h-14 min-w-0 items-center gap-2 sm:h-16 sm:gap-6"
         >
           {/* mobile hamburger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -97,7 +99,7 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
 
-          <Logo />
+          <Logo className="min-w-0 [&_span:last-child]:hidden min-[380px]:[&_span:last-child]:inline" />
 
           <ul className="hidden items-center gap-1 lg:flex">
             {NAV.map((item) => (
@@ -166,17 +168,17 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              aria-label={`Wishlist${wishlistCount ? ` (${wishlistCount} items)` : ""}`}
-              asChild
+              className="relative"
+              aria-pressed={liked}
+              aria-label={liked ? `Unlike (${likeCount})` : `Like (${likeCount})`}
+              onClick={toggleLike}
             >
-              <Link href="/wishlist" className="relative">
-                <Heart />
-                {wishlistCount > 0 && (
-                  <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                    {wishlistCount > 9 ? "9+" : wishlistCount}
-                  </span>
-                )}
-              </Link>
+              <Heart className={cn(liked && "fill-current text-primary")} />
+              {likeCount > 0 ? (
+                <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {likeCount > 9 ? "9+" : likeCount}
+                </span>
+              ) : null}
             </Button>
 
             <Button variant="ghost" size="icon" aria-label="Cart" asChild>
