@@ -70,10 +70,10 @@ export function Hero() {
             {/* <Sparkles className="size-3.5 shrink-0" aria-hidden="true" /> */}
             <span className="text-pretty">500+ designs · Custom studio built in</span>
           </p>
-          <h1 className="animate-hero-copy mt-4 text-[2rem] leading-[1.15] font-bold tracking-tight text-pretty text-primary/50 break-words sm:mt-5 sm:text-display-lg [animation-delay:60ms]">
-            Your <span className="text-primary">Device.</span>
+          <h1 className="animate-hero-copy mt-4 text-[2rem] leading-[1.15] font-bold tracking-tight text-pretty text-electric break-words sm:mt-5 sm:text-display-lg [animation-delay:60ms]">
+            Your <span className="text-ink">Device.</span>
             <br />
-            Your <span className="text-primary">Style.</span>
+            Your <span className="text-ink">Style.</span>
           </h1>
           <p className="animate-hero-copy mt-4 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-body-lg [animation-delay:120ms]">
             Premium skins for phones and laptops. Choose a design or create

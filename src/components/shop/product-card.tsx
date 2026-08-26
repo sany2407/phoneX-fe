@@ -60,10 +60,6 @@ export function ProductCard({
             )}
           </div>
 
-          <div className="pointer-events-none absolute right-3 top-3 z-10">
-            <WishlistButton slug={skin.slug} name={skin.name} />
-          </div>
-
           {photo ? (
             <div className="relative aspect-square transition-transform duration-300 ease-out group-hover:scale-[1.02]">
               <DevicePhoto
@@ -109,6 +105,13 @@ export function ProductCard({
           </div>
         </div>
       </Link>
+
+      {/* Sibling of the link, so the heart takes the click instead of navigating. */}
+      <WishlistButton
+        slug={skin.slug}
+        name={skin.name}
+        className="absolute right-3 top-3 z-10"
+      />
     </article>
   );
 }

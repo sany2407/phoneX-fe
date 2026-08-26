@@ -42,6 +42,7 @@
   /* Aura Kinetic extras */
   --color-electric: var(--electric);
   --color-electric-soft: var(--electric-soft);
+  --color-ink: var(--ink);
   --color-sale: var(--sale);
   --color-sale-soft: var(--sale-soft);
   --color-surface-dim: var(--surface-dim);
@@ -79,6 +80,8 @@
   --ring: #0041c8;
   --electric: #0055ff;
   --electric-soft: #e3e6ff;
+  /* Deep navy from the studio banner; pairs with --electric for headlines. */
+  --ink: #14295e;
   --sale: #972500;
   --sale-soft: #ffe1d9;
   --surface-dim: #d9d9e6;
@@ -118,6 +121,7 @@
   --ring: #b6c4ff;
   --electric: #b6c4ff;
   --electric-soft: #1c2444;
+  --ink: #dbe3ff;
   --sale: #ffb5a0;
   --sale-soft: #3b0900;
   --surface-dim: #191b25;
@@ -314,7 +318,27 @@
   }
 }
 
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-pop {
+  animation: heart-pop 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .heart-pop {
+    animation: none;
+  }
+
   @keyframes hero-phone-in {
     from {
       opacity: 0;

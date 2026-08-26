@@ -24,7 +24,9 @@ export function WishlistButton({
       aria-label={active ? `Remove ${name} from wishlist` : `Save ${name} to wishlist`}
       className={cn(
         "press grid size-9 place-items-center rounded-full border bg-background/85 backdrop-blur transition-colors hover:bg-background",
-        active ? "border-primary/30 text-primary" : "text-foreground/70",
+        active
+          ? "border-rose-500/40 text-rose-600"
+          : "text-foreground/70 hover:text-rose-600",
         className
       )}
       onClick={(e) => {
@@ -36,7 +38,9 @@ export function WishlistButton({
         );
       }}
     >
-      <Heart className={cn("size-4", active && "fill-current")} />
+      <Heart
+        className={cn("size-4 transition-colors", active && "heart-pop fill-current")}
+      />
     </button>
   );
 }
