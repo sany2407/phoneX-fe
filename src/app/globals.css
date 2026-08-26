@@ -1,26 +1,317 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-inter);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* Aura Kinetic extras */
+  --color-electric: var(--electric);
+  --color-electric-soft: var(--electric-soft);
+  --color-sale: var(--sale);
+  --color-sale-soft: var(--sale-soft);
+  --color-surface-dim: var(--surface-dim);
+  --shadow-card-hover: 0px 12px 32px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0px 4px 16px rgba(25, 27, 37, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Aura Kinetic radius scale (soft geometric) */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
+:root {
+  --background: #faf8ff;
+  --foreground: #191b25;
+  --card: #ffffff;
+  --card-foreground: #191b25;
+  --popover: #ffffff;
+  --popover-foreground: #191b25;
+  --primary: #0041c8;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f2ff;
+  --secondary-foreground: #191b25;
+  --muted: #ededfb;
+  --muted-foreground: #5d6072;
+  --accent: #e7e7f5;
+  --accent-foreground: #191b25;
+  --destructive: #ba1a1a;
+  --border: #e1e1ef;
+  --input: #c3c5d9;
+  --ring: #0041c8;
+  --electric: #0055ff;
+  --electric-soft: #e3e6ff;
+  --sale: #972500;
+  --sale-soft: #ffe1d9;
+  --surface-dim: #d9d9e6;
+  --chart-1: #0041c8;
+  --chart-2: #b6c4ff;
+  --chart-3: #191b25;
+  --chart-4: #972500;
+  --chart-5: #c3c5d9;
+  --sidebar: #f3f2ff;
+  --sidebar-foreground: #191b25;
+  --sidebar-primary: #0041c8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7e7f5;
+  --sidebar-accent-foreground: #191b25;
+  --sidebar-border: #e1e1ef;
+  --sidebar-ring: #0041c8;
+}
+
+.dark {
+  --background: #12131a;
+  --foreground: #f0f0fd;
+  --card: #191b25;
+  --card-foreground: #f0f0fd;
+  --popover: #191b25;
+  --popover-foreground: #f0f0fd;
+  --primary: #b6c4ff;
+  --primary-foreground: #001551;
+  --secondary: #23252f;
+  --secondary-foreground: #f0f0fd;
+  --muted: #23252f;
+  --muted-foreground: #a2a5ba;
+  --accent: #2e303a;
+  --accent-foreground: #f0f0fd;
+  --destructive: #ffb4ab;
+  --border: #2e303a;
+  --input: #434656;
+  --ring: #b6c4ff;
+  --electric: #b6c4ff;
+  --electric-soft: #1c2444;
+  --sale: #ffb5a0;
+  --sale-soft: #3b0900;
+  --surface-dim: #191b25;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+  html {
+    @apply font-sans scroll-smooth;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- Aura Kinetic typography scale ---------- */
+@utility text-display-lg {
+  font-size: 56px;
+  line-height: 64px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  @media (min-width: 1024px) {
+    font-size: 64px;
+    line-height: 72px;
+  }
+}
+@utility text-headline-xl {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  @media (min-width: 1024px) {
+    font-size: 40px;
+    line-height: 48px;
+  }
+}
+@utility text-headline-lg {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  @media (min-width: 1024px) {
+    font-size: 32px;
+    line-height: 40px;
+  }
+}
+@utility text-product-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+}
+@utility text-price-point {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+@utility text-body-lg {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+@utility text-body-md {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+@utility text-label-sm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ---------- Layout ---------- */
+@utility container-x {
+  margin-inline: auto;
+  width: 100%;
+  max-width: calc(1280px + 128px);
+  padding-inline: 20px;
+  @media (min-width: 768px) {
+    padding-inline: 40px;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 64px;
+  }
+}
+
+@utility section-pad {
+  padding-block: 56px;
+  @media (min-width: 1024px) {
+    padding-block: 80px;
+  }
+}
+
+/* ---------- Motion (Emil-style: precise, ease-out, nothing from nothing) ---------- */
+@utility press {
+  transition:
+    transform 150ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 200ms ease-out,
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out;
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@utility animate-rise {
+  animation: rise-in 500ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes hero-phone-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@utility animate-hero-phone {
+  animation: hero-phone-in 500ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+
+@keyframes hero-copy-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@utility animate-hero-copy {
+  animation: hero-copy-in 500ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+
+.hero-phone-lead {
+  transition: transform 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-phone-lead:hover {
+    transform: translateY(-8px) scale(1.035);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes hero-phone-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes hero-copy-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .hero-phone-lead {
+    transition: none;
+  }
+
+  .hero-phone-lead:hover {
+    transform: none;
+  }
 }

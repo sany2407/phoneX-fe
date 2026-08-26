@@ -1,0 +1,11 @@
+import type { Metadata } from "next";
+import { ForgotForm } from "@/components/auth/forms";
+
+export const metadata: Metadata = {
+  title: "Reset Password",
+  description: "Reset your phoneX account password.",
+};
+
+export default function ForgotPasswordPage() {
+  return <ForgotForm />;
+}
