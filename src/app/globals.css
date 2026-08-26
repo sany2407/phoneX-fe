@@ -288,6 +288,32 @@
   }
 }
 
+/* Mobile shows a single phone, so tie it to scroll position as it leaves. */
+@keyframes hero-phone-lift {
+  from {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-32px) rotate(-5deg) scale(0.9);
+    opacity: 0.65;
+  }
+}
+
+@media (max-width: 639px) {
+  @supports (animation-timeline: view()) {
+    .hero-phone-scroll {
+      animation-name: hero-phone-lift;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      /* Longhands only: the `animation` shorthand resets duration to 0s. */
+      animation-duration: auto;
+      animation-timeline: view();
+      animation-range: exit 0% exit 85%;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   @keyframes hero-phone-in {
     from {
@@ -313,5 +339,9 @@
 
   .hero-phone-lead:hover {
     transform: none;
+  }
+
+  .hero-phone-scroll {
+    animation: none;
   }
 }

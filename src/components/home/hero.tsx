@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HeroPhoneCycle } from "@/components/home/hero-phone-cycle";
 import { localDeviceImage } from "@/lib/data/device-images";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +10,19 @@ const IPHONE_HERO = localDeviceImage("apple", "iphone-17-pro");
 const IPHONE_SKIN = localDeviceImage("apple", "iphone-17-pro", "17-pro-2.png");
 const IPHONE_SKIN_2 = localDeviceImage("apple", "iphone-17-pro", "iphone-17-pro-3.png");
 
+const HERO_SLIDES = [
+  { src: IPHONE_SKIN_2, alt: "iPhone 17 Pro skins and wraps" },
+  { src: IPHONE_HERO, alt: "" },
+  { src: IPHONE_SKIN, alt: "" },
+];
+
 const PHONE_ASPECT = 674 / 370;
+
+const STATS = [
+  { value: "1M+", label: "skins shipped", chip: "bg-electric-soft", accent: "text-primary" },
+  { value: "50+", label: "devices supported", chip: "bg-violet-100", accent: "text-violet-700" },
+  { value: "4.8★", label: "average rating", chip: "bg-amber-100", accent: "text-amber-700" },
+];
 
 /**
  * `width` is the widest CSS size the phone is ever drawn at, so next/image can
@@ -46,7 +59,7 @@ function HeroPhone({
 
 export function Hero() {
   return (
-    <section className="relative overflow-x-hidden bg-secondary/50">
+    <section className="relative overflow-x-clip bg-secondary/50">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-24 top-0 z-0 hidden size-80 rounded-full bg-electric-soft blur-3xl lg:block lg:-right-40 lg:-top-40 lg:size-[480px]"
@@ -54,13 +67,13 @@ export function Hero() {
       <div className="relative z-10 container-x grid min-w-0 items-center gap-10 py-10 sm:gap-14 sm:py-16 lg:grid-cols-2 lg:py-12">
         <div className="min-w-0">
           <p className="animate-hero-copy inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border bg-background px-3 py-1 text-[11px] font-semibold text-primary sm:text-xs">
-            <Sparkles className="size-3.5 shrink-0" aria-hidden="true" />
+            {/* <Sparkles className="size-3.5 shrink-0" aria-hidden="true" /> */}
             <span className="text-pretty">500+ designs · Custom studio built in</span>
           </p>
-          <h1 className="animate-hero-copy mt-4 text-[2rem] leading-[1.15] font-bold tracking-tight text-pretty break-words sm:mt-5 sm:text-display-lg [animation-delay:60ms]">
-            Your <span className="text-foreground/55">Device.</span>
+          <h1 className="animate-hero-copy mt-4 text-[2rem] leading-[1.15] font-bold tracking-tight text-pretty text-primary/50 break-words sm:mt-5 sm:text-display-lg [animation-delay:60ms]">
+            Your <span className="text-primary">Device.</span>
             <br />
-            Your <span className="text-foreground/55">Style.</span>
+            Your <span className="text-primary">Style.</span>
           </h1>
           <p className="animate-hero-copy mt-4 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-body-lg [animation-delay:120ms]">
             Premium skins for phones and laptops. Choose a design or create
@@ -81,16 +94,16 @@ export function Hero() {
               <Link href="/customize">Create Custom Skin</Link>
             </Button>
           </div>
-          <dl className="animate-hero-copy mt-8 grid grid-cols-3 gap-3 sm:mt-10 sm:flex sm:flex-wrap sm:gap-x-10 sm:gap-y-4 [animation-delay:240ms]">
-            {[
-              ["1M+", "skins shipped"],
-              ["50+", "devices supported"],
-              ["4.8★", "average rating"],
-            ].map(([stat, label]) => (
-              <div key={label}>
+          <dl className="animate-hero-copy mt-8 grid grid-cols-3 gap-2.5 sm:mt-10 sm:flex sm:flex-wrap sm:gap-3 [animation-delay:240ms]">
+            {STATS.map(({ value, label, chip, accent }) => (
+              <div key={label} className={cn("rounded-xl px-3 py-2.5 sm:px-4 sm:py-3", chip)}>
                 <dt className="sr-only">{label}</dt>
-                <dd className="font-heading text-lg font-bold tracking-tight sm:text-xl">{stat}</dd>
-                <dd className="text-[11px] capitalize text-muted-foreground sm:text-sm">{label}</dd>
+                <dd className={cn("font-heading text-lg font-bold tracking-tight sm:text-xl", accent)}>
+                  {value}
+                </dd>
+                <dd className="mt-0.5 text-[11px] capitalize text-foreground/65 sm:text-xs">
+                  {label}
+                </dd>
               </div>
             ))}
           </dl>
@@ -107,14 +120,9 @@ export function Hero() {
               <HeroPhone src={IPHONE_HERO} alt="" width={192} />
             </div>
           </div>
-          <div className="relative z-10 mx-auto w-full sm:w-70 lg:w-77.5">
+          <div className="hero-phone-scroll relative z-10 mx-auto w-full sm:w-70 lg:w-77.5">
             <div className="hero-phone-lead animate-hero-phone [animation-delay:160ms]">
-              <HeroPhone
-                src={IPHONE_SKIN_2}
-                alt="iPhone 17 Pro skins and wraps"
-                width={370}
-                priority
-              />
+              <HeroPhoneCycle slides={HERO_SLIDES} />
             </div>
           </div>
           <span className="animate-hero-phone absolute left-0 top-[52%] z-20 hidden rounded-full border bg-background/90 px-3 py-1.5 text-xs font-semibold shadow-pop backdrop-blur sm:block [animation-delay:220ms]">
