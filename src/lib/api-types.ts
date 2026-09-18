@@ -226,6 +226,7 @@ export interface ApiWishlist {
 export interface ApiAddress {
   id: string;
   userId: string;
+  name: string;
   label: string;
   fullName: string;
   phone: string;
@@ -241,6 +242,7 @@ export interface ApiAddress {
 }
 
 export interface AddressPayload {
+  name: string;
   label: string;
   fullName: string;
   phone: string;

@@ -1,4 +1,4 @@
-export type DeviceType = "phone" | "laptop";
+export type DeviceType = "phone" | "laptop" | "tablet";
 
 export interface Brand {
   id: string;
@@ -130,6 +130,7 @@ export interface CartItem {
 
 export interface Address {
   id: string;
+  name: string;
   label: string;
   fullName: string;
   phone: string;

@@ -36,7 +36,7 @@ export function parseCatalogQuery(
   const ratingRaw = Number(one("rating"));
   return {
     type:
-      type === "phone" || type === "laptop" ? (type as DeviceType) : undefined,
+      type === "phone" || type === "laptop" || type === "tablet" ? (type as DeviceType) : undefined,
     categories: many("category"),
     materials: many("material"),
     finishes: many("finish"),

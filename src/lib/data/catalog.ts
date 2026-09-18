@@ -9,18 +9,18 @@ import type {
 } from "@/lib/types";
 
 export const BRANDS: Brand[] = [
-  { id: "apple", name: "Apple", slug: "apple", types: ["phone", "laptop"] },
-  { id: "samsung", name: "Samsung", slug: "samsung", types: ["phone"] },
-  { id: "oneplus", name: "OnePlus", slug: "oneplus", types: ["phone"] },
-  { id: "google", name: "Google", slug: "google", types: ["phone"] },
+  { id: "apple", name: "Apple", slug: "apple", types: ["phone", "laptop", "tablet"] },
+  { id: "samsung", name: "Samsung", slug: "samsung", types: ["phone", "tablet"] },
+  { id: "oneplus", name: "OnePlus", slug: "oneplus", types: ["phone", "tablet"] },
+  { id: "google", name: "Google", slug: "google", types: ["phone", "tablet"] },
   { id: "nothing", name: "Nothing", slug: "nothing", types: ["phone"] },
-  { id: "xiaomi", name: "Xiaomi", slug: "xiaomi", types: ["phone"] },
+  { id: "xiaomi", name: "Xiaomi", slug: "xiaomi", types: ["phone", "tablet"] },
   { id: "redmi", name: "Redmi", slug: "redmi", types: ["phone"] },
   { id: "realme", name: "Realme", slug: "realme", types: ["phone"] },
   { id: "vivo", name: "Vivo", slug: "vivo", types: ["phone"] },
   { id: "oppo", name: "Oppo", slug: "oppo", types: ["phone"] },
-  { id: "asus", name: "ASUS", slug: "asus", types: ["phone", "laptop"] },
-  { id: "lenovo", name: "Lenovo", slug: "lenovo", types: ["laptop"] },
+  { id: "asus", name: "ASUS", slug: "asus", types: ["phone", "laptop", "tablet"] },
+  { id: "lenovo", name: "Lenovo", slug: "lenovo", types: ["laptop", "tablet"] },
   { id: "hp", name: "HP", slug: "hp", types: ["laptop"] },
   { id: "dell", name: "Dell", slug: "dell", types: ["laptop"] },
   { id: "acer", name: "Acer", slug: "acer", types: ["laptop"] },
@@ -90,6 +90,31 @@ export const DEVICES: DeviceModel[] = [
   // Laptops — Acer / MSI
   m("acer", "Swift X 14", "laptop", 2024),
   m("msi", "Raider 18 HX", "laptop", 2025),
+  // Tablets — Apple
+  m("apple", "iPad Pro 13 M4", "tablet", 2024, true),
+  m("apple", "iPad Pro 11 M4", "tablet", 2024, true),
+  m("apple", "iPad Air 13 M2", "tablet", 2024),
+  m("apple", "iPad Air 11 M2", "tablet", 2024),
+  m("apple", "iPad mini 7", "tablet", 2024),
+  m("apple", "iPad 10th Gen", "tablet", 2022),
+  // Tablets — Samsung
+  m("samsung", "Galaxy Tab S10 Ultra", "tablet", 2024, true),
+  m("samsung", "Galaxy Tab S10+", "tablet", 2024, true),
+  m("samsung", "Galaxy Tab S10 FE", "tablet", 2025),
+  m("samsung", "Galaxy Tab A9+", "tablet", 2023),
+  // Tablets — Xiaomi
+  m("xiaomi", "Pad 7 Pro", "tablet", 2025, true),
+  m("xiaomi", "Pad 6s Pro", "tablet", 2024),
+  // Tablets — OnePlus
+  m("oneplus", "OnePlus Pad 2", "tablet", 2024, true),
+  // Tablets — Google
+  m("google", "Pixel Tablet 2", "tablet", 2025, true),
+  // Tablets — ASUS
+  m("asus", "ROG Flow Z13", "tablet", 2024, true),
+  m("asus", "Zenpad 11", "tablet", 2024),
+  // Tablets — Lenovo
+  m("lenovo", "Tab P12 Pro", "tablet", 2024, true),
+  m("lenovo", "Tab M11", "tablet", 2024),
 ];
 
 export const DESIGN_CATEGORIES: DesignCategory[] = [
@@ -134,6 +159,7 @@ export const SKIN_TYPES: Material[] = MATERIALS;
 export const CUSTOM_BASE_PRICE: Record<DeviceType, number> = {
   phone: 599,
   laptop: 1199,
+  tablet: 899,
 };
 
 export const COUPONS: Coupon[] = [

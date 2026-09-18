@@ -134,6 +134,7 @@ export default function CheckoutPage() {
     addressesService.getAll().then((apiAddresses) => {
       const addresses: Address[] = apiAddresses.map((a) => ({
         id: a.id,
+        name: a.name,
         label: a.label,
         fullName: a.fullName,
         phone: a.phone,
@@ -215,6 +216,7 @@ export default function CheckoutPage() {
 
     // Otherwise save the form values as a new address
     const created = await addressesService.create({
+      name: form.fullName,
       label: "Home",
       fullName: form.fullName,
       phone: form.phone,

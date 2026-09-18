@@ -22,6 +22,7 @@ export default function AccountPage() {
   const [showAddrForm, setShowAddrForm] = useState(false);
   const [addr, setAddr] = useState({
     label: "",
+    name: "",
     fullName: "",
     phone: "",
     line1: "",
@@ -147,7 +148,7 @@ export default function AccountPage() {
                 return;
               }
               addAddress(addr);
-              setAddr({ label: "", fullName: "", phone: "", line1: "", city: "", state: "", pincode: "" });
+              setAddr({ label: "", name: "", fullName: "", phone: "", line1: "", city: "", state: "", pincode: "" });
               setShowAddrForm(false);
               toast.success("Address saved");
             }}
@@ -160,7 +161,7 @@ export default function AccountPage() {
             <div className="space-y-1.5">
               <Label htmlFor="ad-name">Full name</Label>
               <Input id="ad-name" className="h-11" value={addr.fullName}
-                onChange={(e) => setAddr({ ...addr, fullName: e.target.value })} required />
+                onChange={(e) => setAddr({ ...addr, name: e.target.value, fullName: e.target.value })} required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ad-phone">Phone</Label>
