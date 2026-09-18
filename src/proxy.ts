@@ -47,7 +47,7 @@ function isAuthPage(pathname: string): boolean {
 // Middleware
 // ---------------------------------------------------------------------------
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const token = request.cookies.get("phonex_access_token")?.value;
