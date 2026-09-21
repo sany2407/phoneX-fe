@@ -19,6 +19,7 @@ import { SearchDialog } from "@/components/layout/search-dialog";
 import { useCart } from "@/lib/stores/cart-store";
 import { useAuth } from "@/lib/stores/auth-store";
 import { useWishlist } from "@/lib/stores/wishlist-store";
+import { CouponMarquee } from "@/components/layout/coupon-marquee";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -53,22 +54,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 min-w-0 overflow-x-clip">
       {/* ── Announcement bar ── */}
-      <div className="relative overflow-hidden bg-foreground">
-        {/* subtle shimmer sweep */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)",
-            animation: "shimmer 6s linear infinite",
-          }}
-        />
-        <p className="relative px-4 py-2 text-center text-xs font-medium tracking-wide text-background/80">
-          Free shipping over&nbsp;₹499&nbsp;·&nbsp;Extra 10% off with code&nbsp;
-          <span className="font-bold text-background">PHONE10</span>
-        </p>
-      </div>
+      <CouponMarquee />
 
       {/* ── Main nav ── */}
       <div className="border-b border-border/60 bg-background/80 backdrop-blur-xl backdrop-saturate-150">

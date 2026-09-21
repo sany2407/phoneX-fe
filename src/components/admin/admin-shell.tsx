@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
+import { usePathname, useRouter } from "next/navigation";import {
   BarChart3,
   Box,
   ChevronLeft,
@@ -202,6 +201,57 @@ function SidebarContent({
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  //
+  // Strategy: wait for the Zustand persist layer to rehydrate from
+  // localStorage before making any redirect decision. We track this with
+  // a local `ready` flag that flips true once the store has finished
+  // rehydration (via onFinishHydration) OR after a short timeout fallback.
+  //
+  const router  = useRouter();
+  const user    = useAuth((s) => s.user);
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // useAuth.persist is available when the persist middleware is used.
+    // onFinishHydration fires once the store has been rehydrated from storage.
+    const unsub = useAuth.persist.onFinishHydration(() => setReady(true));
+
+    // If already rehydrated (e.g. navigated to this page after hydration
+    // already happened in a previous render), flip immediately.
+    if (useAuth.persist.hasHydrated()) setReady(true);
+
+    // Safety fallback — if for any reason the callback never fires,
+    // unblock after 500ms so the user isn't stuck on the spinner.
+    const timeout = setTimeout(() => setReady(true), 500);
+
+    return () => {
+      unsub();
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    if (!user || !isAdmin) {
+      router.replace("/admin/login");
+    }
+  }, [ready, user, isAdmin, router]);
+
+  // Show spinner until store is ready
+  if (!ready) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-[#080c14]">
+        <span className="size-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+      </div>
+    );
+  }
+
+  // Not an admin — render nothing while redirect is in flight
+  if (!user || !isAdmin) return null;
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex min-h-svh bg-background">

@@ -1,11 +1,50 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { SkinArt } from "@/components/artwork/skin-art";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { getCategories, getSkins } from "@/lib/api";
+import type { ApiCategory } from "@/lib/api-types";
 
-export function CategoryStrip() {
-  const categories = getCategories().slice(0, 10);
+// ─── fetch from API ───────────────────────────────────────────────────────────
+
+async function fetchApiCategories(): Promise<ApiCategory[]> {
+  try {
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const res  = await fetch(`${base}/categories`, {
+      next: { revalidate: 300 }, // revalidate every 5 minutes
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items: ApiCategory[] = json.data ?? json;
+    return Array.isArray(items) ? items.filter((c) => c.isActive) : [];
+  } catch {
+    return [];
+  }
+}
+
+// ─── component ───────────────────────────────────────────────────────────────
+
+export async function CategoryStrip() {
+  // Fetch API categories; fall back to static ones if the API is unavailable
+  const apiCategories = await fetchApiCategories();
+
+  // Static categories are used for SkinArt fallback colours/patterns and count
+  const staticCategories = getCategories();
+
+  // Merge: use API data for name/slug/imageUrl, static data for pattern/colors
+  const categories = (
+    apiCategories.length > 0 ? apiCategories : staticCategories.map((c) => ({
+      id:       c.id,
+      name:     c.name,
+      slug:     c.slug,
+      imageUrl: undefined,
+      image:    undefined,
+      isActive: true,
+      createdAt: "",
+      description: c.blurb,
+    } satisfies ApiCategory))
+  ).slice(0, 10);
 
   return (
     <section className="container-x section-pad" aria-labelledby="designs-heading">
@@ -17,7 +56,7 @@ export function CategoryStrip() {
             Browse by design
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Seventeen collections, one that&apos;s yours.
+            {categories.length} collections, one that&apos;s yours.
           </p>
         </div>
         <Link
@@ -28,11 +67,19 @@ export function CategoryStrip() {
         </Link>
       </ScrollReveal>
 
-      {/* Grid — each card gets its own reveal with stagger */}
+      {/* Grid */}
       <ScrollReveal threshold={0.05}>
         <ul className="mt-8 grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {categories.map((cat, i) => {
-            const count = getSkins({ categoryIds: [cat.id] }).length;
+            // Local skin count (from static data, matched by slug)
+            const staticCat = staticCategories.find((s) => s.slug === cat.slug);
+            const count = staticCat
+              ? getSkins({ categoryIds: [staticCat.id] }).length
+              : 0;
+
+            // Image: prefer API imageUrl, then image, then generated SkinArt
+            const imgSrc = cat.imageUrl ?? cat.image;
+
             return (
               <li
                 key={cat.id}
@@ -46,7 +93,23 @@ export function CategoryStrip() {
                   {/* artwork */}
                   <div className="aspect-4/3 overflow-hidden">
                     <div className="h-full w-full transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.06]">
-                      <SkinArt pattern={cat.pattern} colors={cat.colors} />
+                      {imgSrc ? (
+                        <Image
+                          src={imgSrc}
+                          alt={cat.name}
+                          width={400}
+                          height={300}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : staticCat ? (
+                        <SkinArt
+                          pattern={staticCat.pattern}
+                          colors={staticCat.colors}
+                        />
+                      ) : (
+                        // ultimate fallback: solid muted bg
+                        <div className="h-full w-full bg-muted" />
+                      )}
                     </div>
                   </div>
 
@@ -57,10 +120,9 @@ export function CategoryStrip() {
                         {cat.name}
                       </h3>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {count} designs
+                        {count > 0 ? `${count} designs` : cat.description ?? ""}
                       </p>
                     </div>
-                    {/* chevron — slides in on hover */}
                     <ArrowRight
                       className="size-3.5 shrink-0 translate-x-1 text-primary opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
                       aria-hidden="true"

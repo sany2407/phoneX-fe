@@ -9,11 +9,12 @@ import { CouponCard } from "@/components/home/coupon-card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import {
   featuredSkins,
-  getCoupons,
   getModels,
   newArrivals,
   offerSkins,
 } from "@/lib/api";
+import type { ApiCoupon } from "@/lib/api-types";
+import { fetchPublicCoupons } from "@/lib/services/coupons-public";
 import { Button } from "@/components/ui/button";
 import { DeviceCard } from "@/components/device/device-card";
 
@@ -48,9 +49,10 @@ function SectionHeader({
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
   const featured = featuredSkins(8);
-  const fresh = newArrivals(4);
+  const fresh    = newArrivals(4);
+  const coupons  = await fetchPublicCoupons();
 
   return (
     <>
@@ -178,9 +180,13 @@ export default function HomePage() {
               <h2 id="offers-heading" className="text-headline-lg">Coupons</h2>
               <p className="mt-1.5 text-sm text-muted-foreground">Apply at checkout.</p>
               <div className="mt-6 space-y-3">
-                {getCoupons().map((c) => (
-                  <CouponCard key={c.code} coupon={c} />
-                ))}
+                {coupons.length > 0 ? (
+                  coupons.map((c) => (
+                    <CouponCard key={c.id} coupon={c} />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No active coupons right now.</p>
+                )}
               </div>
             </ScrollReveal>
           </aside>

@@ -279,6 +279,12 @@
   100% { transform: translateX(100%); }
 }
 
+/* ---------- Announcement marquee ---------- */
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 /* ---------- Motion (Emil-style: precise, ease-out, nothing from nothing) ---------- */
 @utility press {
   transition:

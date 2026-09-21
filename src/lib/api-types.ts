@@ -80,7 +80,7 @@ export interface ApiDeviceModel {
   brand?: ApiBrand;
   name: string;
   slug: string;
-  type: "PHONE" | "LAPTOP";
+  type: "PHONE" | "LAPTOP" | "TABLET" | undefined;
   year: number;
   isPopular: boolean;
   isActive: boolean;
@@ -96,7 +96,8 @@ export interface ApiCategory {
   name: string;
   slug: string;
   description?: string;
-  image?: string;
+  image?: string;      // legacy field name (may still appear)
+  imageUrl?: string;   // actual field name the backend sends
   isActive: boolean;
   createdAt: string;
 }
@@ -262,14 +263,23 @@ export interface AddressPayload {
 export interface ApiCoupon {
   id: string;
   code: string;
-  label: string;
-  description?: string;
-  type: "PERCENTAGE" | "FLAT" | "FREE_SHIPPING";
-  value: number;
-  minOrderAmount?: number;
-  maxUses?: number;
+  discountType: "PERCENTAGE" | "FLAT" | "FREE_SHIPPING";
+  discountValue: number;
+  minOrderValue?: number | null;
+  maxDiscount?: number | null;
+  validFrom: string;
+  validUntil: string;
+  usageLimit?: number | null;
   usedCount: number;
   isActive: boolean;
+  createdAt: string;
+  // legacy fields (may be absent)
+  label?: string;
+  description?: string;
+  type?: string;
+  value?: number;
+  minOrderAmount?: number;
+  maxUses?: number;
   expiresAt?: string;
 }
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdminShell } from "@/components/admin/admin-shell";
 
 export const metadata: Metadata = {
   title: {
@@ -9,6 +8,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Login page sits directly under /admin/login and must NOT get the sidebar.
+// The AdminShell is applied only inside the (dashboard) route group.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminShell>{children}</AdminShell>;
+  return <>{children}</>;
 }

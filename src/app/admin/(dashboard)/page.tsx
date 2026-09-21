@@ -555,26 +555,26 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total revenue"
-          value={stats ? formatINR(stats.totalRevenue) : "—"}
+          value={stats ? formatINR(stats.totalRevenue ?? 0) : "—"}
           icon={DollarSign}
           trend="up"
           loading={loading}
         />
         <StatCard
           label="Total orders"
-          value={stats ? stats.totalOrders.toLocaleString() : "—"}
+          value={stats ? (stats.totalOrders ?? 0).toLocaleString() : "—"}
           icon={ShoppingCart}
           loading={loading}
         />
         <StatCard
           label="Customers"
-          value={stats ? stats.totalCustomers.toLocaleString() : "—"}
+          value={stats ? (stats.totalCustomers ?? 0).toLocaleString() : "—"}
           icon={Users}
           loading={loading}
         />
         <StatCard
           label="Products"
-          value={stats ? stats.totalProducts.toLocaleString() : "—"}
+          value={stats ? (stats.totalProducts ?? 0).toLocaleString() : "—"}
           icon={Package}
           loading={loading}
         />

@@ -37,4 +37,21 @@ export const devicesService = {
       { public: true }
     );
   },
+
+  /**
+   * Fetch all models across all brands in one shot.
+   * Calls GET /devices/brands (with models included) or falls back to
+   * fetching each brand's models individually.
+   */
+  async getAllModels(): Promise<ApiDeviceModel[]> {
+    const brands = await api.get<ApiBrand[]>("/devices/brands", { public: true });
+    const results = await Promise.all(
+      brands.map((b) =>
+        api
+          .get<ApiDeviceModel[]>(`/devices/brands/${b.slug}/models`, { public: true })
+          .catch(() => [] as ApiDeviceModel[])
+      )
+    );
+    return results.flat();
+  },
 };
