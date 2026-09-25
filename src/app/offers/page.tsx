@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { CouponCard } from "@/components/home/coupon-card";
 import { offerSkins } from "@/lib/api";
-import type { ApiCoupon } from "@/lib/api-types";
 import { fetchPublicCoupons } from "@/lib/services/coupons-public";
 
 export const metadata: Metadata = {
@@ -15,22 +14,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/offers" },
 };
 
-async function fetchCoupons(): Promise<ApiCoupon[]> {
-  try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
-    const res  = await fetch(`${base}/coupons`, { next: { revalidate: 300 } });
-    if (!res.ok) return [];
-    const json = await res.json();
-    const items: ApiCoupon[] = json.data ?? json;
-    return Array.isArray(items) ? items.filter((c) => c.isActive) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function OffersPage() {
   const offers  = offerSkins(12);
-  const coupons = await fetchCoupons();
+  const coupons = await fetchPublicCoupons();
 
   return (
     <div className="container-x py-10 lg:py-14">

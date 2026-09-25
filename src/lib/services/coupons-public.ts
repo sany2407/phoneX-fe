@@ -27,7 +27,7 @@ export async function fetchPublicCoupons(): Promise<ApiCoupon[]> {
     if (!res.ok) return [];
     const json = await res.json();
     const items: ApiCoupon[] = json.data ?? json;
-    return Array.isArray(items) ? items.filter((c) => c.isActive) : [];
+    return Array.isArray(items) ? items : [];
   } catch {
     return [];
   }
