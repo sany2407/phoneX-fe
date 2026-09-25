@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import { Box, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { adminService, type CreateProductPayload } from "@/lib/services/admin.service";
-import { productsService } from "@/lib/services/products.service";
 import { adminService as _admin } from "@/lib/services/admin.service";
 import type { ApiProduct, ApiCategory } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +13,17 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+// Extract unique brand names from a product's variants
+function getBrands(p: ApiProduct): string[] {
+  const variants = (p as ApiProduct & { variants?: { deviceModel?: { brand?: { name?: string } } }[] }).variants ?? [];
+  const names = variants
+    .map((v) => v.deviceModel?.brand?.name)
+    .filter((n): n is string => Boolean(n));
+  return [...new Set(names)];
+}
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
@@ -197,28 +207,30 @@ export default function AdminProductsPage() {
     let cancelled = false;
     setLoading(true); setError(null);
 
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const qs   = new URLSearchParams({ page: String(page), limit: "20" });
+    if (search.trim()) qs.set("search", search.trim());
+
     Promise.all([
-      productsService.list({ page, limit: 20 }),
+      fetch(`${base}/products?${qs}`, { headers: { "Content-Type": "application/json" } })
+        .then((r) => r.json()),
       _admin.listCategories(),
     ])
-      .then(([prodData, cats]) => {
+      .then(([json, cats]) => {
         if (cancelled) return;
-        // Handle both { items, totalPages } and { data, pagination } shapes
-        const items = (prodData as { items?: ApiProduct[]; data?: ApiProduct[] }).items
-          ?? (prodData as { data?: ApiProduct[] }).data
-          ?? (Array.isArray(prodData) ? prodData as unknown as ApiProduct[] : []);
-        const pages = (prodData as { totalPages?: number }).totalPages
-          ?? (prodData as { pagination?: { totalPages?: number } }).pagination?.totalPages
-          ?? 1;
+        // Shape: { data: { products: [...], pagination: { totalPages, ... } } }
+        const inner = json?.data ?? json;
+        const items: ApiProduct[] = inner?.products ?? inner?.items ?? (Array.isArray(inner) ? inner : []);
+        const pag   = inner?.pagination ?? {};
         setProducts(items);
-        setTotalPages(pages);
+        setTotalPages(pag.totalPages ?? 1);
         setCategories(Array.isArray(cats) ? cats : []);
       })
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Failed."); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [page, refreshKey]);
+  }, [page, refreshKey]); // search handled client-side for instant filtering
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -226,7 +238,8 @@ export default function AdminProductsPage() {
     return products.filter((p) =>
       p.name.toLowerCase().includes(q) ||
       p.category?.name.toLowerCase().includes(q) ||
-      p.material.toLowerCase().includes(q)
+      p.material.toLowerCase().includes(q) ||
+      getBrands(p).some((b) => b.toLowerCase().includes(q))
     );
   }, [products, search]);
 
@@ -285,6 +298,7 @@ export default function AdminProductsPage() {
                 <tr className="border-b text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <th className="py-3 pl-5 pr-3">Product</th>
                   <th className="py-3 px-3">Category</th>
+                  <th className="py-3 px-3">Brands</th>
                   <th className="py-3 px-3">Material</th>
                   <th className="py-3 px-3 text-right">Price</th>
                   <th className="py-3 px-3">Status</th>
@@ -297,9 +311,13 @@ export default function AdminProductsPage() {
                     {/* Product */}
                     <td className="py-3 pl-5 pr-3">
                       <div className="flex items-center gap-3">
-                        {p.images?.[0] ? (
+                        {(p.images?.[0] as unknown as string | { url?: string } | undefined) ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.images[0].url} alt="" className="size-9 rounded-lg border object-cover" />
+                          <img
+                            src={typeof p.images[0] === "string" ? p.images[0] : (p.images[0] as { url?: string }).url ?? ""}
+                            alt=""
+                            className="size-9 rounded-lg border object-cover"
+                          />
                         ) : (
                           <div className="grid size-9 place-items-center rounded-lg bg-muted">
                             <Box className="size-4 text-muted-foreground" />
@@ -316,6 +334,23 @@ export default function AdminProductsPage() {
                     {/* Category */}
                     <td className="py-3 px-3 text-xs text-muted-foreground">
                       {p.category?.name ?? "—"}
+                    </td>
+                    {/* Brands */}
+                    <td className="py-3 px-3">
+                      <div className="flex flex-wrap gap-1">
+                        {getBrands(p).length > 0 ? (
+                          getBrands(p).map((brand) => (
+                            <span
+                              key={brand}
+                              className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                            >
+                              {brand}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground/40">—</span>
+                        )}
+                      </div>
                     </td>
                     {/* Material */}
                     <td className="py-3 px-3 text-xs text-muted-foreground capitalize">
