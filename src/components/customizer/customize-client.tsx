@@ -121,6 +121,10 @@ export function CustomizeClient() {
                 <span className="font-medium text-foreground">{model.name}</span>.
               </p>
             )}
+            <p className="mt-2 text-center text-[11px] text-muted-foreground/80">
+              The device mockup is just for reference — your skin is
+              precision-cut for your actual device.
+            </p>
           </div>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
             <Check className="size-3.5 text-primary" aria-hidden="true" />

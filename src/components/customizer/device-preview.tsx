@@ -155,13 +155,19 @@ export function CustomDevicePreview({
         <div
           className="absolute z-0 overflow-hidden"
           style={{
-            // Transparent interior bounds of /customize-case.png.
-            // The opaque camera island sits on top and masks its own area.
-            top:    "1.9%",
-            left:   "27.2%",
-            width:  "45.9%",
-            height: "96.4%",
-            borderRadius: "3px",
+            // Transparent interior bounds of /customize-case.png, bled
+            // ~1–2.5% outward on every side so the artwork tucks UNDER the
+            // opaque frame. The frame masks the seam — no hairline fringe.
+            // (Frame insets: top ~12px, left ~22px, right ~19px, bottom ~11px
+            //  at 639px; bleed stays >=6px inside the outer edge.)
+            top:    "1%",
+            left:   "24.7%",
+            width:  "50.2%",
+            height: "97.8%",
+            // Elliptical corner rounding (≈34px at asset scale) pulls the
+            // bled square corners inside the frame's rounded outer edge.
+            // Straight edges still bleed under the frame — no fringe.
+            borderRadius: "11% / 6%",
           }}
         >
           {artwork ? (
