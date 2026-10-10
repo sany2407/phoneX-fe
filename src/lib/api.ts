@@ -63,7 +63,8 @@ export function resolveDeviceSegment(
   | { kind: "category"; type: DeviceType }
   | { kind: "brand"; brand: Brand }
   | null {
-  if (slug === "phones") return { kind: "category", type: "phone" };
+  if (slug === "phones")  return { kind: "category", type: "phone" };
+  if (slug === "tablets") return { kind: "category", type: "tablet" };
   if (slug === "laptops") return { kind: "category", type: "laptop" };
   const brand = getBrandBySlug(slug);
   return brand ? { kind: "brand", brand } : null;

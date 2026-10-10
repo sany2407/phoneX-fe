@@ -112,6 +112,7 @@ export function CustomizeClient() {
                 deviceType={model.type}
                 brand={brand.id}
                 imageSrc={imageSrc}
+                onArtworkChange={(src) => patch({ imageSrc: src, savedId: null })}
               />
             </div>
             {!imageSrc && (

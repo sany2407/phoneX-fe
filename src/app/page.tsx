@@ -5,7 +5,6 @@ import { Hero } from "@/components/home/hero";
 import { CategoryStrip } from "@/components/home/category-strip";
 import { CustomBanner } from "@/components/home/custom-banner";
 import { ProductGrid } from "@/components/shop/product-grid";
-import { CouponCard } from "@/components/home/coupon-card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import {
   featuredSkins,
@@ -13,8 +12,6 @@ import {
   newArrivals,
   offerSkins,
 } from "@/lib/api";
-import type { ApiCoupon } from "@/lib/api-types";
-import { fetchPublicCoupons } from "@/lib/services/coupons-public";
 import { Button } from "@/components/ui/button";
 import { DeviceCard } from "@/components/device/device-card";
 
@@ -23,11 +20,13 @@ function SectionHeader({
   title,
   href,
   linkLabel = "View all",
+  id,
 }: {
   eyebrow?: string;
   title: string;
   href?: string;
   linkLabel?: string;
+  id?: string;
 }) {
   return (
     <div className="flex items-end justify-between gap-4">
@@ -35,7 +34,7 @@ function SectionHeader({
         {eyebrow && (
           <p className="text-label-sm text-primary">{eyebrow}</p>
         )}
-        <h2 className="mt-1.5 text-headline-lg">{title}</h2>
+        <h2 id={id} className="mt-1.5 text-headline-lg">{title}</h2>
       </div>
       {href && (
         <Link
@@ -52,7 +51,6 @@ function SectionHeader({
 export default async function HomePage() {
   const featured = featuredSkins(8);
   const fresh    = newArrivals(4);
-  const coupons  = await fetchPublicCoupons();
 
   return (
     <>
@@ -159,38 +157,20 @@ export default async function HomePage() {
         </ScrollReveal>
       </section>
 
-      {/* ── Offers + Coupons ── */}
+      {/* ── On sale ── */}
       <section className="container-x section-pad pt-0" aria-labelledby="offers-heading">
-        <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
-          <div>
-            <ScrollReveal className="reveal" style={{ "--reveal-delay": "0ms" } as React.CSSProperties}>
-              <SectionHeader
-                eyebrow="Limited time"
-                title="On sale"
-                href="/offers"
-                linkLabel="All offers"
-              />
-            </ScrollReveal>
-            <ScrollReveal className="reveal mt-8" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
-              <ProductGrid skins={offerSkins(4)} columns={4} />
-            </ScrollReveal>
-          </div>
-          <aside>
-            <ScrollReveal className="reveal" style={{ "--reveal-delay": "80ms" } as React.CSSProperties}>
-              <h2 id="offers-heading" className="text-headline-lg">Coupons</h2>
-              <p className="mt-1.5 text-sm text-muted-foreground">Apply at checkout.</p>
-              <div className="mt-6 space-y-3">
-                {coupons.length > 0 ? (
-                  coupons.map((c) => (
-                    <CouponCard key={c.id} coupon={c} />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No active coupons right now.</p>
-                )}
-              </div>
-            </ScrollReveal>
-          </aside>
-        </div>
+        <ScrollReveal className="reveal" style={{ "--reveal-delay": "0ms" } as React.CSSProperties}>
+          <SectionHeader
+            eyebrow="Limited time"
+            title="On sale"
+            href="/offers"
+            linkLabel="All offers"
+            id="offers-heading"
+          />
+        </ScrollReveal>
+        <ScrollReveal className="reveal mt-8" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
+          <ProductGrid skins={offerSkins(4)} columns={4} />
+        </ScrollReveal>
       </section>
     </>
   );

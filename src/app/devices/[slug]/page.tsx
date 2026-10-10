@@ -12,7 +12,7 @@ import {
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  const segments = ["phones", "laptops"];
+  const segments = ["phones", "tablets", "laptops"];
   for (const b of getBrands()) segments.push(b.slug);
   return segments.map((slug) => ({ slug }));
 }
@@ -23,8 +23,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!resolved) return {};
   if (resolved.kind === "category") {
     const t = resolved.type;
+    const label = t === "phone" ? "Phone" : t === "tablet" ? "Tablet" : "Laptop";
     return {
-      title: `${t === "phone" ? "Phone" : "Laptop"} Skins — Skins by Model`,
+      title: `${label} Skins — Skins by Model`,
       description: `Browse precision-cut ${t} skins by brand and model. Find your exact device.`,
       alternates: { canonical: `/devices/${slug}` },
     };
@@ -54,7 +55,7 @@ export default async function DeviceSegmentPage({ params }: Props) {
           </ol>
         </nav>
         <header className="mt-4">
-          <h1 className="text-headline-lg">{type === "phone" ? "Phone" : "Laptop"} Skins &amp; Wraps</h1>
+          <h1 className="text-headline-lg">{type === "phone" ? "Phone" : type === "tablet" ? "Tablet" : "Laptop"} Skins &amp; Wraps</h1>
           <p className="mt-2 text-muted-foreground">
             {models.length} models · pick yours to see only compatible skins.
           </p>
