@@ -2,32 +2,29 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import {
-  Box, ChevronDown, ChevronRight, Package,
-  Pencil, Plus, RefreshCw, Search, Trash2, X,
+  Box, ChevronDown, ChevronRight, Image as ImageIcon,
+  Package, Pencil, Plus, RefreshCw, Search, Trash2, X,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  adminService,
-  type CreateProductPayload,
-  type CreateVariantPayload,
-} from "@/lib/services/admin.service";
-import type { ApiProduct, ApiCategory, ApiDeviceModel } from "@/lib/api-types";
+import { adminService } from "@/lib/services/admin.service";
+import type { ApiCategory, ApiDeviceModel } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-// ─── types ────────────────────────────────────────────────────────────────────
+// ─── local types matching actual backend schema ───────────────────────────────
 
-interface Variant {
+interface ProductVariant {
   id: string;
   sku: string;
   price: string | number;
   comparePrice?: string | number | null;
   stock: number;
+  images?: string[];
+  isActive?: boolean;
   deviceModel?: {
     id: string;
     name: string;
@@ -36,8 +33,19 @@ interface Variant {
   };
 }
 
-interface Product extends ApiProduct {
-  variants?: Variant[];
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  images: string[];
+  isFeatured: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  category?: { id: string; name: string; slug: string };
+  categoryId?: string;
+  variants?: ProductVariant[];
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -49,11 +57,13 @@ function getBrandNames(p: Product): string[] {
   return [...new Set(names)];
 }
 
-function imgSrc(p: Product): string | null {
-  const first = p.images?.[0];
-  if (!first) return null;
-  if (typeof first === "string") return first;
-  return (first as { url?: string }).url ?? null;
+function lowestPrice(p: Product): string {
+  const prices = (p.variants ?? [])
+    .map((v) => Number(v.price))
+    .filter((n) => n > 0);
+  if (!prices.length) return "—";
+  const min = Math.min(...prices);
+  return `₹${min.toFixed(0)}`;
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
@@ -87,6 +97,7 @@ function Modal({ title, wide = false, onClose, children }: {
 }
 
 // ─── Product form ─────────────────────────────────────────────────────────────
+// Fields: name, description, categoryId, images (string[]), isFeatured
 
 function ProductForm({ initial, categories, onSave, onClose }: {
   initial?: Product;
@@ -96,32 +107,42 @@ function ProductForm({ initial, categories, onSave, onClose }: {
 }) {
   const [name,       setName]      = useState(initial?.name ?? "");
   const [desc,       setDesc]      = useState(initial?.description ?? "");
-  const [categoryId, setCat]       = useState(initial?.categoryId ?? "");
-  const [material,   setMaterial]  = useState(initial?.material ?? "");
-  const [finish,     setFinish]    = useState(initial?.finish ?? "");
-  const [basePrice,  setPrice]     = useState(String(initial?.basePrice ?? ""));
-  const [discountPct,setDiscount]  = useState(String(initial?.discountPct ?? "0"));
+  const [categoryId, setCat]       = useState(
+    initial?.categoryId ?? initial?.category?.id ?? ""
+  );
+  const [imageInput, setImageInput] = useState("");
+  const [images,     setImages]    = useState<string[]>(initial?.images ?? []);
   const [isFeatured, setFeatured]  = useState(initial?.isFeatured ?? false);
   const [busy,       setBusy]      = useState(false);
 
+  function addImage() {
+    const url = imageInput.trim();
+    if (!url) return;
+    setImages((prev) => [...prev, url]);
+    setImageInput("");
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !categoryId || !material.trim() || !finish.trim() || !basePrice) {
-      toast.error("Name, category, material, finish and price are required.");
+    if (!name.trim() || !categoryId) {
+      toast.error("Name and category are required.");
       return;
     }
     setBusy(true);
     try {
-      const payload: CreateProductPayload = {
-        name: name.trim(), description: desc.trim() || undefined,
-        categoryId, material: material.trim(), finish: finish.trim(),
-        basePrice: Number(basePrice), discountPct: Number(discountPct) || 0, isFeatured,
+      // Match exact backend createProduct / updateProduct shape
+      const payload = {
+        name: name.trim(),
+        description: desc.trim() || undefined,
+        categoryId,
+        images,
+        isFeatured,
       };
       const result = initial
         ? await adminService.updateProduct(initial.id, payload)
         : await adminService.createProduct(payload);
       toast.success(initial ? "Product updated." : "Product created.");
-      onSave(result as Product);
+      onSave(result as unknown as Product);
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save product.");
@@ -130,14 +151,21 @@ function ProductForm({ initial, categories, onSave, onClose }: {
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      {/* Name */}
       <div className="space-y-1.5">
         <Label>Name *</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Cyberpunk City" required />
+        <Input value={name} onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Neon City" required />
       </div>
+
+      {/* Description */}
       <div className="space-y-1.5">
         <Label>Description</Label>
-        <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Short description…" />
+        <Input value={desc} onChange={(e) => setDesc(e.target.value)}
+          placeholder="Short description of the design…" />
       </div>
+
+      {/* Category */}
       <div className="space-y-1.5">
         <Label>Category *</Label>
         <select value={categoryId} onChange={(e) => setCat(e.target.value)}
@@ -146,30 +174,43 @@ function ProductForm({ initial, categories, onSave, onClose }: {
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Material *</Label>
-          <Input value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="matte" required />
+
+      {/* Design images */}
+      <div className="space-y-1.5">
+        <Label>Design images</Label>
+        <div className="flex gap-2">
+          <Input value={imageInput} onChange={(e) => setImageInput(e.target.value)}
+            placeholder="https://… paste image URL"
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())} />
+          <Button type="button" variant="outline" onClick={addImage} className="shrink-0">
+            Add
+          </Button>
         </div>
-        <div className="space-y-1.5">
-          <Label>Finish *</Label>
-          <Input value={finish} onChange={(e) => setFinish(e.target.value)} placeholder="satin" required />
-        </div>
+        {images.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {images.map((url, i) => (
+              <div key={i} className="group relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="size-16 rounded-lg border object-cover" />
+                <button type="button"
+                  onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                  className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">Paste image URLs one at a time. First image is the primary.</p>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Base price (₹) *</Label>
-          <Input type="number" min="0" value={basePrice} onChange={(e) => setPrice(e.target.value)} placeholder="499" required />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Discount %</Label>
-          <Input type="number" min="0" max="100" value={discountPct} onChange={(e) => setDiscount(e.target.value)} placeholder="0" />
-        </div>
-      </div>
+
+      {/* Featured */}
       <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-        <input type="checkbox" checked={isFeatured} onChange={(e) => setFeatured(e.target.checked)} className="rounded" />
+        <input type="checkbox" checked={isFeatured} onChange={(e) => setFeatured(e.target.checked)}
+          className="rounded" />
         Featured product
       </label>
+
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         <Button type="submit" disabled={busy}>{busy ? "Saving…" : initial ? "Update" : "Create"}</Button>
@@ -179,39 +220,42 @@ function ProductForm({ initial, categories, onSave, onClose }: {
 }
 
 // ─── Variant form ─────────────────────────────────────────────────────────────
+// Fields: productId, deviceModelId, sku, price, comparePrice, stock, images[]
 
 function VariantForm({ productId, allModels, onSave, onClose }: {
   productId: string;
   allModels: ApiDeviceModel[];
-  onSave: (v: Variant) => void;
+  onSave: (v: ProductVariant) => void;
   onClose: () => void;
 }) {
-  const [modelSearch,  setModelSearch]  = useState("");
-  const [modelId,      setModelId]      = useState("");
-  const [sku,          setSku]          = useState("");
-  const [price,        setPrice]        = useState("");
-  const [comparePrice, setCompare]      = useState("");
-  const [stock,        setStock]        = useState("0");
-  const [busy,         setBusy]         = useState(false);
+  const [modelSearch,  setModelSearch] = useState("");
+  const [modelId,      setModelId]     = useState("");
+  const [sku,          setSku]         = useState("");
+  const [price,        setPrice]       = useState("");
+  const [comparePrice, setCompare]     = useState("");
+  const [stock,        setStock]       = useState("0");
+  const [busy,         setBusy]        = useState(false);
+
+  // Models with brand info injected (the ApiDeviceModel from our service
+  // may have brand as a nested object since listModels returns brand data)
+  type ModelWithBrand = ApiDeviceModel & { brand?: { id: string; name: string; slug: string } };
 
   const filteredModels = useMemo(() => {
     const q = modelSearch.trim().toLowerCase();
-    if (!q) return allModels.slice(0, 30);
-    return allModels
-      .filter((m) => {
-        const brandName = (m as ApiDeviceModel & { brand?: { name?: string } }).brand?.name ?? "";
-        return m.name.toLowerCase().includes(q) || brandName.toLowerCase().includes(q);
-      })
-      .slice(0, 20);
+    if (!q) return (allModels as ModelWithBrand[]).slice(0, 30);
+    return (allModels as ModelWithBrand[]).filter((m) =>
+      m.name.toLowerCase().includes(q) ||
+      m.brand?.name.toLowerCase().includes(q)
+    ).slice(0, 20);
   }, [allModels, modelSearch]);
 
-  const selectedModel = allModels.find((m) => m.id === modelId);
+  const selectedModel = (allModels as ModelWithBrand[]).find((m) => m.id === modelId);
 
-  // Auto-generate SKU from product + model
+  // Auto-generate SKU suggestion
   useEffect(() => {
     if (selectedModel && !sku) {
-      const model = selectedModel.slug.toUpperCase().replace(/-/g, "").slice(0, 8);
-      setSku(`SKU-${model}`);
+      const abbr = selectedModel.slug.toUpperCase().replace(/-/g, "").slice(0, 8);
+      setSku(`SKU-${abbr}`);
     }
   }, [selectedModel, sku]);
 
@@ -223,16 +267,17 @@ function VariantForm({ productId, allModels, onSave, onClose }: {
     }
     setBusy(true);
     try {
-      const payload: CreateVariantPayload = {
+      const payload = {
         productId,
         deviceModelId: modelId,
         sku: sku.trim(),
         price: Number(price),
+        comparePrice: comparePrice ? Number(comparePrice) : undefined,
         stock: Number(stock) || 0,
       };
       const result = await adminService.createVariant(payload);
       toast.success("Variant added.");
-      onSave(result as unknown as Variant);
+      onSave(result as unknown as ProductVariant);
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to add variant.");
@@ -241,7 +286,7 @@ function VariantForm({ productId, allModels, onSave, onClose }: {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {/* Device model picker */}
+      {/* Device model search */}
       <div className="space-y-1.5">
         <Label>Device model *</Label>
         <div className="relative">
@@ -253,28 +298,26 @@ function VariantForm({ productId, allModels, onSave, onClose }: {
             className="pl-8"
           />
         </div>
-        {modelSearch && !modelId && (
+        {/* Dropdown */}
+        {modelSearch.length > 0 && !modelId && (
           <ul className="max-h-48 overflow-y-auto rounded-xl border bg-card shadow-md">
             {filteredModels.length === 0 ? (
               <li className="px-4 py-3 text-sm text-muted-foreground">No models found</li>
-            ) : filteredModels.map((m) => {
-              const brand = (m as ApiDeviceModel & { brand?: { name?: string } }).brand?.name ?? "";
-              return (
-                <li key={m.id}>
-                  <button type="button"
-                    onClick={() => { setModelId(m.id); setModelSearch(`${brand} ${m.name}`); }}
-                    className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-primary/5">
-                    <span className="font-medium">{m.name}</span>
-                    <span className="text-xs text-muted-foreground">{brand}</span>
-                  </button>
-                </li>
-              );
-            })}
+            ) : filteredModels.map((m) => (
+              <li key={m.id}>
+                <button type="button"
+                  onClick={() => { setModelId(m.id); setModelSearch(`${m.brand?.name} ${m.name}`); }}
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-primary/5">
+                  <span className="font-medium">{m.name}</span>
+                  <span className="text-xs text-muted-foreground">{m.brand?.name}</span>
+                </button>
+              </li>
+            ))}
           </ul>
         )}
         {selectedModel && (
           <p className="text-xs font-medium text-primary">
-            ✓ {(selectedModel as ApiDeviceModel & { brand?: { name?: string } }).brand?.name} {selectedModel.name}
+            ✓ {(selectedModel as ModelWithBrand).brand?.name} {selectedModel.name}
           </p>
         )}
       </div>
@@ -283,28 +326,34 @@ function VariantForm({ productId, allModels, onSave, onClose }: {
       <div className="space-y-1.5">
         <Label>SKU *</Label>
         <Input value={sku} onChange={(e) => setSku(e.target.value)}
-          placeholder="e.g. CP-CITY-IP16" className="font-mono" required />
+          placeholder="e.g. NEON-CITY-IP16" className="font-mono" required />
       </div>
 
-      {/* Price + Compare price + Stock */}
+      {/* Price + Compare + Stock */}
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5">
           <Label>Price (₹) *</Label>
-          <Input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="499" required />
+          <Input type="number" min="0" value={price}
+            onChange={(e) => setPrice(e.target.value)} placeholder="499" required />
         </div>
         <div className="space-y-1.5">
-          <Label>Compare price</Label>
-          <Input type="number" min="0" value={comparePrice} onChange={(e) => setCompare(e.target.value)} placeholder="599" />
+          <Label>Compare at (₹)</Label>
+          <Input type="number" min="0" value={comparePrice}
+            onChange={(e) => setCompare(e.target.value)} placeholder="599" />
+          <p className="text-[10px] text-muted-foreground">Shown as strikethrough</p>
         </div>
         <div className="space-y-1.5">
           <Label>Stock</Label>
-          <Input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="50" />
+          <Input type="number" min="0" value={stock}
+            onChange={(e) => setStock(e.target.value)} placeholder="50" />
         </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={busy || !modelId}>{busy ? "Adding…" : "Add variant"}</Button>
+        <Button type="submit" disabled={busy || !modelId}>
+          {busy ? "Adding…" : "Add variant"}
+        </Button>
       </div>
     </form>
   );
@@ -334,25 +383,24 @@ function ConfirmDelete({ label, onConfirm, onClose }: {
   );
 }
 
-// ─── Variant rows (inline expansion) ─────────────────────────────────────────
+// ─── Variant sub-table (inline expansion) ────────────────────────────────────
 
 function VariantRows({ product, allModels, onVariantAdded }: {
   product: Product;
   allModels: ApiDeviceModel[];
-  onVariantAdded: (productId: string, v: Variant) => void;
+  onVariantAdded: (productId: string, v: ProductVariant) => void;
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const variants = product.variants ?? [];
 
   return (
     <>
-      {/* Variant table */}
       <tr className="bg-muted/20">
         <td colSpan={7} className="px-5 pb-3 pt-2">
           <div className="rounded-xl border bg-background overflow-hidden">
             {variants.length === 0 ? (
               <p className="px-4 py-3 text-xs text-muted-foreground italic">
-                No variants yet — add one to make this skin available for a device.
+                No variants yet. Add one to make this skin available for a device.
               </p>
             ) : (
               <table className="w-full text-xs">
@@ -378,8 +426,13 @@ function VariantRows({ product, allModels, onVariantAdded }: {
                       <td className="py-2 px-3 text-right tabular-nums text-muted-foreground">
                         {v.comparePrice ? `₹${Number(v.comparePrice).toFixed(0)}` : "—"}
                       </td>
-                      <td className={cn("py-2 pl-3 pr-4 text-right tabular-nums font-semibold",
-                        v.stock === 0 ? "text-destructive" : v.stock <= 5 ? "text-amber-600" : "text-emerald-700"
+                      <td className={cn(
+                        "py-2 pl-3 pr-4 text-right tabular-nums font-semibold",
+                        v.stock === 0
+                          ? "text-destructive"
+                          : v.stock <= 5
+                            ? "text-amber-600"
+                            : "text-emerald-700"
                       )}>
                         {v.stock}
                       </td>
@@ -388,7 +441,6 @@ function VariantRows({ product, allModels, onVariantAdded }: {
                 </tbody>
               </table>
             )}
-            {/* Add variant button */}
             <div className="border-t px-4 py-2.5">
               <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs"
                 onClick={() => setAddOpen(true)}>
@@ -420,35 +472,33 @@ function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded }: {
   allModels: ApiDeviceModel[];
   onEdit: () => void;
   onDelete: () => void;
-  onVariantAdded: (productId: string, v: Variant) => void;
+  onVariantAdded: (productId: string, v: ProductVariant) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const brands   = getBrandNames(product);
   const varCount = product.variants?.length ?? 0;
-  const img      = imgSrc(product);
+  const firstImg = product.images?.[0];
 
   return (
     <>
       <tr className="group border-b hover:bg-muted/20 transition-colors">
-        {/* Expand toggle + product */}
+        {/* Expand + image + name */}
         <td className="py-3 pl-4 pr-3">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <button type="button"
               onClick={() => setExpanded((v) => !v)}
               className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              aria-label={expanded ? "Collapse variants" : "Expand variants"}
-            >
+              aria-label={expanded ? "Collapse" : "Expand variants"}>
               {expanded
                 ? <ChevronDown className="size-3.5" />
                 : <ChevronRight className="size-3.5" />}
             </button>
-            {img ? (
+            {firstImg ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={img} alt="" className="size-9 rounded-lg border object-cover shrink-0" />
+              <img src={firstImg} alt="" className="size-9 rounded-lg border object-cover shrink-0" />
             ) : (
               <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted">
-                <Box className="size-4 text-muted-foreground" />
+                <ImageIcon className="size-4 text-muted-foreground" />
               </div>
             )}
             <div className="min-w-0">
@@ -462,26 +512,25 @@ function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded }: {
         </td>
 
         {/* Category */}
-        <td className="py-3 px-3 text-xs text-muted-foreground">{product.category?.name ?? "—"}</td>
+        <td className="py-3 px-3 text-xs text-muted-foreground">
+          {product.category?.name ?? "—"}
+        </td>
 
-        {/* Brands (from variants) */}
+        {/* Brands (derived from variants) */}
         <td className="py-3 px-3">
           <div className="flex flex-wrap gap-1">
-            {brands.length > 0 ? brands.map((b) => (
-              <span key={b} className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{b}</span>
-            )) : <span className="text-xs text-muted-foreground/40">—</span>}
+            {brands.length > 0
+              ? brands.map((b) => (
+                <span key={b} className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{b}</span>
+              ))
+              : <span className="text-xs text-muted-foreground/40">—</span>}
           </div>
         </td>
 
-        {/* Material */}
-        <td className="py-3 px-3 text-xs text-muted-foreground capitalize">{product.material} · {product.finish}</td>
-
-        {/* Price */}
+        {/* Price range (from variants) */}
         <td className="py-3 px-3 text-right tabular-nums font-medium text-sm">
-          {formatINR(product.basePrice)}
-          {product.discountPct > 0 && (
-            <span className="ml-1 text-[11px] font-semibold text-sale">−{product.discountPct}%</span>
-          )}
+          {lowestPrice(product)}
+          {varCount > 1 && <span className="ml-1 text-[11px] text-muted-foreground">+</span>}
         </td>
 
         {/* Status */}
@@ -492,7 +541,9 @@ function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded }: {
               {product.isActive ? "Active" : "Inactive"}
             </span>
             {product.isFeatured && (
-              <span className="rounded-full bg-electric-soft px-2 py-0.5 text-[11px] font-semibold text-primary">Featured</span>
+              <span className="rounded-full bg-electric-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
+                Featured
+              </span>
             )}
           </div>
         </td>
@@ -502,19 +553,18 @@ function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded }: {
           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={onEdit}
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              aria-label="Edit">
+              aria-label="Edit product">
               <Pencil className="size-3.5" />
             </button>
             <button onClick={onDelete}
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-              aria-label="Delete">
+              aria-label="Delete product">
               <Trash2 className="size-3.5" />
             </button>
           </div>
         </td>
       </tr>
 
-      {/* Expanded variant rows */}
       {expanded && (
         <VariantRows
           product={product}
@@ -544,7 +594,6 @@ export default function AdminProductsPage() {
   const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [delTarget,  setDelTarget]  = useState<Product | null>(null);
 
-  // Load products + categories + all device models (for variant form)
   useEffect(() => {
     let cancelled = false;
     setLoading(true); setError(null);
@@ -553,10 +602,16 @@ export default function AdminProductsPage() {
     const qs   = new URLSearchParams({ page: String(page), limit: "20" });
 
     Promise.all([
-      fetch(`${base}/products?${qs}`, { headers: { "Content-Type": "application/json" } }).then((r) => r.json()),
+      // Products — shape: { data: { products: [], pagination: {} } }
+      fetch(`${base}/products?${qs}`, { headers: { "Content-Type": "application/json" } })
+        .then((r) => r.json()),
+      // Categories for the product form
       adminService.listCategories(),
+      // All device models for the variant form (fetch per brand in parallel)
       adminService.listBrands()
-        .then((brands) => Promise.all(brands.map((b) => adminService.listModels(b.slug).catch(() => []))))
+        .then((brands) =>
+          Promise.all(brands.map((b) => adminService.listModels(b.slug).catch(() => [])))
+        )
         .then((nested) => nested.flat()),
     ])
       .then(([json, cats, models]) => {
@@ -570,7 +625,7 @@ export default function AdminProductsPage() {
         setCategories(Array.isArray(cats) ? cats : []);
         setAllModels(Array.isArray(models) ? models : []);
       })
-      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Failed."); })
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load."); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
@@ -582,16 +637,13 @@ export default function AdminProductsPage() {
     return products.filter((p) =>
       p.name.toLowerCase().includes(q) ||
       p.category?.name.toLowerCase().includes(q) ||
-      p.material.toLowerCase().includes(q) ||
       getBrandNames(p).some((b) => b.toLowerCase().includes(q))
     );
   }, [products, search]);
 
-  const handleVariantAdded = useCallback((productId: string, v: Variant) => {
+  const handleVariantAdded = useCallback((productId: string, v: ProductVariant) => {
     setProducts((prev) => prev.map((p) =>
-      p.id === productId
-        ? { ...p, variants: [...(p.variants ?? []), v] }
-        : p
+      p.id === productId ? { ...p, variants: [...(p.variants ?? []), v] } : p
     ));
   }, []);
 
@@ -611,15 +663,15 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Products</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {loading ? "Loading…" : `${total} skin designs · click a row to manage variants`}
+            {loading ? "Loading…" : `${total} skin designs · expand a row to manage variants`}
           </p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" className="gap-1.5" onClick={() => setAddOpen(true)}>
             <Plus className="size-3.5" /> Add product
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setRefreshKey((k) => k + 1)}
-            disabled={loading} className="gap-1.5">
+          <Button variant="outline" size="sm"
+            onClick={() => setRefreshKey((k) => k + 1)} disabled={loading} className="gap-1.5">
             <RefreshCw className={cn("size-3.5", loading && "animate-spin")} /> Refresh
           </Button>
         </div>
@@ -632,13 +684,13 @@ export default function AdminProductsPage() {
           placeholder="Search by name, category, brand…" className="h-10 pl-9" />
       </div>
 
-      {/* Info banner */}
+      {/* Explainer */}
       <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-electric-soft/40 px-4 py-3 text-sm">
         <Package className="mt-0.5 size-4 shrink-0 text-primary" />
-        <p className="text-muted-foreground">
-          <span className="font-semibold text-foreground">Product</span> = the skin design (e.g. "Cyberpunk City").{" "}
-          <span className="font-semibold text-foreground">Variant</span> = that design cut for a specific device model.
-          Expand any product to view and add variants.
+        <p className="text-muted-foreground leading-relaxed">
+          <strong className="font-semibold text-foreground">Product</strong> = the skin design artwork (e.g. "Neon City").{" "}
+          <strong className="font-semibold text-foreground">Variant</strong> = that design cut for a specific phone model, with its own SKU, price and stock.
+          Click the <ChevronRight className="inline size-3.5 align-middle" /> to expand variants.
         </p>
       </div>
 
@@ -652,7 +704,9 @@ export default function AdminProductsPage() {
           <div className="flex flex-col items-center py-16 text-center">
             <Box className="mb-3 size-8 text-muted-foreground" />
             <p className="font-semibold">{search ? `No results for "${search}"` : "No products yet"}</p>
-            {!search && <p className="mt-1 text-sm text-muted-foreground">Add your first skin design to get started.</p>}
+            {!search && (
+              <p className="mt-1 text-sm text-muted-foreground">Add your first skin design to get started.</p>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -662,8 +716,7 @@ export default function AdminProductsPage() {
                   <th className="py-3 pl-4 pr-3">Product / Design</th>
                   <th className="py-3 px-3">Category</th>
                   <th className="py-3 px-3">Brands</th>
-                  <th className="py-3 px-3">Material</th>
-                  <th className="py-3 px-3 text-right">Price</th>
+                  <th className="py-3 px-3 text-right">From</th>
                   <th className="py-3 px-3">Status</th>
                   <th className="py-3 pl-3 pr-4 text-right">Actions</th>
                 </tr>
@@ -684,22 +737,23 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <>
             <Separator />
             <div className="flex items-center justify-between px-5 py-3 text-sm">
               <p className="text-muted-foreground">Page {page} of {totalPages}</p>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-                <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>
+                <Button size="sm" variant="outline" disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}>Previous</Button>
+                <Button size="sm" variant="outline" disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}>Next</Button>
               </div>
             </div>
           </>
         )}
       </div>
 
-      {/* ── Modals ── */}
+      {/* Modals */}
       {addOpen && (
         <Modal title="Add skin design" onClose={() => setAddOpen(false)}>
           <ProductForm
@@ -714,7 +768,10 @@ export default function AdminProductsPage() {
           <ProductForm
             initial={editTarget}
             categories={categories}
-            onSave={(p) => { setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, ...p } : x)); setEditTarget(null); }}
+            onSave={(p) => {
+              setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, ...p } : x));
+              setEditTarget(null);
+            }}
             onClose={() => setEditTarget(null)}
           />
         </Modal>
@@ -726,7 +783,7 @@ export default function AdminProductsPage() {
             onClose={() => setDelTarget(null)}
             onConfirm={async () => {
               await adminService.deleteProduct(delTarget.id);
-              toast.success(`"${delTarget.name}" deleted.`);
+              toast.success(`"${delTarget.name}" deactivated.`);
               setProducts((prev) => prev.filter((p) => p.id !== delTarget.id));
               setDelTarget(null);
             }}

@@ -15,15 +15,16 @@ export function CustomBanner() {
       <ScrollReveal className="reveal">
         <div className="relative overflow-hidden rounded-2xl bg-foreground px-6 py-14 text-background sm:px-12 lg:px-16 lg:py-20">
 
-          {/* ── Ambient orbs ── */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            {/* top-left */}
-            <div className="absolute -left-24 -top-24 size-[420px] rounded-full bg-electric/35 blur-[100px] animate-orb" />
-            {/* bottom-right */}
-            <div className="absolute -bottom-32 right-10 size-80 rounded-full bg-violet-500/25 blur-[80px] animate-orb-slow" />
-            {/* centre accent */}
-            <div className="absolute left-1/2 top-1/2 size-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[80px]" />
-          </div>
+          {/* ── Subtle gradient (no floating blobs) ── */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 50% at 10% 0%, rgba(10,63,214,0.2) 0%, transparent 60%)," +
+                "radial-gradient(ellipse 50% 40% at 90% 100%, rgba(100,80,200,0.12) 0%, transparent 55%)",
+            }}
+          />
 
           {/* ── Subtle grid texture ── */}
           <div
@@ -38,19 +39,10 @@ export function CustomBanner() {
 
           {/* ── Content ── */}
           <div className="relative max-w-xl">
-            <p className="text-label-sm tracking-[0.08em] text-electric">phoneX studio</p>
+            <p className="text-label-sm text-primary/70">phoneX studio</p>
 
             <h2 className="mt-3 font-heading text-headline-lg text-white">
-              Can&apos;t find it?{" "}
-              <span
-                className="bg-clip-text text-transparent"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #60a5fa 0%, #a78bfa 60%, #f472b6 100%)",
-                }}
-              >
-                Design it.
-              </span>
+              Can&apos;t find it? Design it.
             </h2>
 
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-background/65">

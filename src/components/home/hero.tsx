@@ -23,20 +23,24 @@ const STATS = [
 export function Hero() {
   return (
     <section className="relative overflow-x-clip bg-foreground text-background">
-      {/* ── Gradient orbs ── */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="animate-orb absolute -left-32 -top-32 size-[500px] rounded-full bg-electric/25 blur-[120px]" />
-        <div className="animate-orb-slow absolute -bottom-40 -right-40 size-[600px] rounded-full bg-violet-600/20 blur-[140px]" />
-        <div className="absolute left-1/2 top-1/2 size-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[100px]" />
-      </div>
+      {/* ── Subtle ambient gradient — no floating blobs ── */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 20% 0%, rgba(10,63,214,0.18) 0%, transparent 65%)," +
+            "radial-gradient(ellipse 60% 50% at 80% 100%, rgba(100,80,200,0.10) 0%, transparent 60%)",
+        }}
+      />
 
-      {/* ── Grid texture ── */}
+      {/* ── Subtle grid texture ── */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+            "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
           backgroundSize: "60px 60px",
         }}
       />
@@ -46,35 +50,27 @@ export function Hero() {
 
         {/* Left — copy */}
         <div className="min-w-0">
+
           {/* Eyebrow */}
           <div className="animate-fade-up [animation-delay:0ms]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/70 backdrop-blur-sm">
-              <Sparkles className="size-3 text-electric" aria-hidden="true" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/60 backdrop-blur-sm">
+              <Sparkles className="size-3 text-primary" aria-hidden="true" />
               500+ designs · Custom studio built in
             </span>
           </div>
 
-          {/* Headline */}
-          <h1 className="mt-5 overflow-hidden">
-            <span className="block animate-word-up text-display-xl text-white [animation-delay:80ms]">
+          {/* Headline — fade-up, no gradient text */}
+          <h1 className="mt-5">
+            <span className="block animate-fade-up text-display-xl text-white [animation-delay:80ms]">
               Your Device.
             </span>
-            <span className="block animate-word-up text-display-xl [animation-delay:160ms]">
-              <span className="text-white">Your </span>
-              <span
-                className="bg-clip-text text-transparent"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #4d8eff 0%, #a78bfa 50%, #60a5fa 100%)",
-                }}
-              >
-                Style.
-              </span>
+            <span className="block animate-fade-up text-display-xl text-white [animation-delay:160ms]">
+              Your Style.
             </span>
           </h1>
 
           {/* Body */}
-          <p className="animate-fade-up mt-5 max-w-md text-pretty text-base leading-relaxed text-white/55 sm:text-body-lg [animation-delay:240ms]">
+          <p className="animate-fade-up mt-5 max-w-md text-pretty text-base leading-relaxed text-white/50 sm:text-body-lg [animation-delay:240ms]">
             Premium skins for phones, tablets &amp; laptops — cut to the millimetre
             for your exact model. Choose a design or build your own.
           </p>
@@ -83,7 +79,7 @@ export function Hero() {
           <div className="animate-fade-up mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap [animation-delay:320ms]">
             <Button
               size="lg"
-              className="h-12 w-full gap-2 px-7 text-base sm:w-auto bg-white text-foreground hover:bg-white/90 shadow-[0_4px_24px_rgba(255,255,255,0.15)]"
+              className="h-12 w-full gap-2 px-7 text-base sm:w-auto bg-white text-foreground hover:bg-white/92"
               asChild
             >
               <Link href="#find-device">
@@ -93,7 +89,7 @@ export function Hero() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 w-full px-7 text-base sm:w-auto border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-white/25 backdrop-blur-sm"
+              className="h-12 w-full px-7 text-base sm:w-auto border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-white/25"
               asChild
             >
               <Link href="/customize">Create Custom Skin</Link>
@@ -104,10 +100,10 @@ export function Hero() {
           <dl className="animate-fade-up mt-10 flex flex-wrap gap-x-8 gap-y-4 border-t border-white/10 pt-8 [animation-delay:400ms]">
             {STATS.map(({ value, label }) => (
               <div key={label}>
-                <dd className="font-heading text-2xl font-bold tracking-tight text-white">
+                <dd className="font-heading text-2xl font-semibold tracking-tight text-white">
                   {value}
                 </dd>
-                <dt className="mt-0.5 text-xs text-white/40 uppercase tracking-[0.06em]">
+                <dt className="mt-0.5 text-xs text-white/35 tracking-wide">
                   {label}
                 </dt>
               </div>
@@ -117,7 +113,7 @@ export function Hero() {
 
         {/* Right — orbital phone carousel */}
         <div className="hero-phone-scroll relative z-10 animate-hero-phone [animation-delay:160ms]">
-          {/* Desktop orbital carousel — hidden on mobile */}
+          {/* Desktop orbital carousel */}
           <div className="hidden sm:block">
             <PhoneOrbit slides={SLIDES} />
           </div>
@@ -132,22 +128,22 @@ export function Hero() {
             />
           </div>
 
-          {/* Floating glass badges — pinned relative to this wrapper */}
-          <span className="animate-hero-phone absolute left-[-16px] top-[48%] z-30 hidden rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold text-white shadow-pop backdrop-blur-md sm:block [animation-delay:220ms]">
+          {/* Floating glass badges */}
+          <span className="animate-hero-phone absolute left-[-16px] top-[48%] z-30 hidden rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md sm:block [animation-delay:220ms]">
             🖐 Matte texture you can feel
           </span>
-          <span className="animate-hero-phone absolute bottom-[8%] right-[-16px] z-30 hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold text-white shadow-pop backdrop-blur-md sm:flex [animation-delay:260ms]">
-            <ShieldCheck className="size-3.5 text-electric" aria-hidden="true" />
+          <span className="animate-hero-phone absolute bottom-[8%] right-[-16px] z-30 hidden items-center gap-1.5 rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md sm:flex [animation-delay:260ms]">
+            <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
             Bubble-free fit
           </span>
-          <span className="animate-hero-phone absolute right-[10%] top-[-12px] z-30 hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold text-white shadow-pop backdrop-blur-md sm:flex [animation-delay:180ms]">
-            <Truck className="size-3.5 text-electric" aria-hidden="true" />
+          <span className="animate-hero-phone absolute right-[10%] top-[-12px] z-30 hidden items-center gap-1.5 rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md sm:flex [animation-delay:180ms]">
+            <Truck className="size-3.5 text-primary" aria-hidden="true" />
             Ships in 24h
           </span>
         </div>
       </div>
 
-      {/* ── Bottom fade ── */}
+      {/* ── Bottom fade into page ── */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent"

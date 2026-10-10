@@ -57,7 +57,7 @@ export function Navbar() {
       <CouponMarquee />
 
       {/* ── Main nav ── */}
-      <div className="border-b border-border/60 bg-background/80 backdrop-blur-xl backdrop-saturate-150">
+      <div className="glass-header border-b border-border/60 sticky-glass">
         <nav
           aria-label="Main navigation"
           className="container-x flex h-14 min-w-0 items-center gap-2 sm:h-16 sm:gap-6"

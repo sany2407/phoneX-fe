@@ -28,16 +28,12 @@ export interface CreateProductPayload {
   name: string;
   description?: string;
   categoryId: string;
-  material: string;
-  finish: string;
-  basePrice: number;
-  discountPct?: number;
+  images?: string[];
   isFeatured?: boolean;
-  tags?: string[];
 }
 
 export interface AddProductImagesPayload {
-  images: { url: string; alt?: string; isPrimary?: boolean }[];
+  images: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +221,6 @@ export const adminService = {
   addProductImages(id: string, payload: AddProductImagesPayload): Promise<ApiProduct> {
     return api.post<ApiProduct>(`/admin/products/${id}/images`, payload);
   },
-
   // ── Variants ───────────────────────────────────────────────────────────────
 
   /** POST /admin/variants */
