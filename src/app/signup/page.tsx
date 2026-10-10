@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { SignupForm } from "./signup-form";
 
@@ -13,13 +14,6 @@ const BENEFITS = [
   "Wishlist across phones and laptops",
   "Coupons and drops, first in line",
 ];
-
-// Carbon-fibre twill drawn in CSS, so no image is needed.
-const CARBON = {
-  backgroundColor: "#23272d",
-  backgroundImage:
-    "repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 5px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0 2px, transparent 2px 5px)",
-} as const;
 
 export default function SignupPage() {
   return (
@@ -46,18 +40,19 @@ export default function SignupPage() {
           ))}
         </ul>
 
-        {/* One memorable element: a skinned phone, cropped off the corner */}
+        {/* Phone image — cropped off the bottom-right corner */}
         <div
           aria-hidden="true"
-          className="absolute -bottom-24 right-12 h-[430px] w-[210px] rotate-[8deg] rounded-[2.25rem] border border-black/30 shadow-card-hover"
-          style={CARBON}
+          className="absolute -bottom-16 right-8 h-[430px] w-[210px] rotate-[8deg] drop-shadow-[0_24px_48px_rgba(0,0,0,0.35)]"
         >
-          <div className="absolute left-3.5 top-3.5 grid h-[88px] w-[88px] grid-cols-2 place-items-center gap-1 rounded-[1.5rem] bg-black/55 p-2.5">
-            <span className="size-8 rounded-full border-2 border-white/15 bg-black" />
-            <span className="size-8 rounded-full border-2 border-white/15 bg-black" />
-            <span className="size-8 rounded-full border-2 border-white/15 bg-black" />
-            <span className="size-3 rounded-full bg-white/20" />
-          </div>
+          <Image
+            src="/iphone-register.png"
+            alt=""
+            fill
+            sizes="210px"
+            className="object-cover"
+            priority
+          />
         </div>
       </section>
 
