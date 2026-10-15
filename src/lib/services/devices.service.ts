@@ -1,7 +1,19 @@
 import { api } from "@/lib/api-client";
-import type { ApiBrand, ApiDeviceModel, ApiVariant } from "@/lib/api-types";
+import type { ApiBrand, ApiDeviceModel, ApiDeviceType, ApiVariant } from "@/lib/api-types";
 
 export const devicesService = {
+  /** GET /devices/types — Smartphone, Laptop, Tablet… */
+  getDeviceTypes(): Promise<ApiDeviceType[]> {
+    return api.get<ApiDeviceType[]>("/devices/types", { public: true });
+  },
+
+  /** GET /devices/types/:typeSlug/models — all models of a type, cross-brand */
+  getModelsByType(typeSlug: string): Promise<ApiDeviceModel[]> {
+    return api.get<ApiDeviceModel[]>(`/devices/types/${typeSlug}/models`, {
+      public: true,
+    });
+  },
+
   /** GET /devices/brands */
   getBrands(): Promise<ApiBrand[]> {
     return api.get<ApiBrand[]>("/devices/brands", { public: true });
@@ -12,11 +24,12 @@ export const devicesService = {
     return api.get<ApiBrand>(`/devices/brands/${brandSlug}`, { public: true });
   },
 
-  /** GET /devices/brands/:brandSlug/models */
-  getModelsForBrand(brandSlug: string): Promise<ApiDeviceModel[]> {
-    return api.get<ApiDeviceModel[]>(`/devices/brands/${brandSlug}/models`, {
-      public: true,
-    });
+  /** GET /devices/brands/:brandSlug/models — optionally filtered by device type slug */
+  getModelsForBrand(brandSlug: string, typeSlug?: string): Promise<ApiDeviceModel[]> {
+    const url =
+      `/devices/brands/${brandSlug}/models` +
+      (typeSlug ? `?type=${encodeURIComponent(typeSlug)}` : "");
+    return api.get<ApiDeviceModel[]>(url, { public: true });
   },
 
   /** GET /devices/brands/:brandSlug/models/:modelSlug */

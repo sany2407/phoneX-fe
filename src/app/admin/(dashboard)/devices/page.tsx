@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
-  ChevronDown, ChevronRight, Cpu, Laptop,
-  Pencil, Plus, RefreshCw, Search, Smartphone, Tablet, Trash2, X,
+  ChevronDown, ChevronRight, Cpu, Headphones, Laptop,
+  Pencil, Plus, RefreshCw, Search, Smartphone, Tablet, Trash2, Watch, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -13,7 +13,8 @@ import {
   type CreateDeviceModelPayload,
   type UpdateDeviceModelPayload,
 } from "@/lib/services/admin.service";
-import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
+import { devicesService } from "@/lib/services/devices.service";
+import type { ApiBrand, ApiDeviceModel, ApiDeviceType } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,19 +23,42 @@ import { cn } from "@/lib/utils";
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
+// Device types come from GET /devices/types (smartphone, laptop, tablet…).
+// Icon + chip styling is keyed by type slug, with a neutral fallback.
 const TYPE_ICON: Record<string, React.ElementType> = {
-  PHONE: Smartphone, TABLET: Tablet, LAPTOP: Laptop,
+  smartphone: Smartphone,
+  tablet: Tablet,
+  laptop: Laptop,
+  earbuds: Headphones,
+  smartwatch: Watch,
 };
 const TYPE_CHIP: Record<string, string> = {
-  PHONE:  "bg-primary/10 text-primary",
-  TABLET: "bg-violet-100 text-violet-700",
-  LAPTOP: "bg-amber-100 text-amber-700",
+  smartphone: "bg-primary/10 text-primary",
+  tablet: "bg-violet-100 text-violet-700",
+  laptop: "bg-amber-100 text-amber-700",
+  earbuds: "bg-emerald-100 text-emerald-700",
+  smartwatch: "bg-sky-100 text-sky-700",
 };
-const MODEL_TYPES = ["PHONE", "TABLET", "LAPTOP"] as const;
 
-function typeLabel(t: string | undefined) {
-  if (!t) return "Unknown";
-  return t.charAt(0) + t.slice(1).toLowerCase();
+// Legacy rows (pre-deviceTypeId) carry a PHONE/TABLET/LAPTOP string.
+const LEGACY_TYPE_SLUG: Record<string, string> = {
+  PHONE: "smartphone", TABLET: "tablet", LAPTOP: "laptop",
+};
+
+function modelTypeSlug(m: ApiDeviceModel): string | undefined {
+  return m.deviceType?.slug ?? (m.type ? LEGACY_TYPE_SLUG[m.type] : undefined);
+}
+
+function modelTypeName(m: ApiDeviceModel): string {
+  return m.deviceType?.name ?? (m.type ? m.type.charAt(0) + m.type.slice(1).toLowerCase() : "Unknown");
+}
+
+function typeIcon(slug: string | undefined): React.ElementType {
+  return (slug && TYPE_ICON[slug]) || Cpu;
+}
+
+function typeChip(slug: string | undefined): string {
+  return (slug && TYPE_CHIP[slug]) ?? "bg-muted text-muted-foreground";
 }
 
 // ─── Modal ───────────────────────────────────────────────────────────────────
@@ -134,38 +158,42 @@ function BrandForm({
 // ─── Model form ───────────────────────────────────────────────────────────────
 
 function ModelForm({
-  brandId, initial, onSave, onClose,
+  brandId, deviceTypes, initial, onSave, onClose,
 }: {
   brandId: string;
+  deviceTypes: ApiDeviceType[];
   initial?: ApiDeviceModel;
   onSave: (m: ApiDeviceModel) => void;
   onClose: () => void;
 }) {
   const [name, setName]   = useState(initial?.name ?? "");
-  const [slug, setSlug]   = useState(initial?.slug ?? "");
-  const [type, setType]   = useState<typeof MODEL_TYPES[number]>(
-    (initial?.type as typeof MODEL_TYPES[number]) ?? "PHONE"
+  const [deviceTypeId, setDeviceTypeId] = useState(
+    initial?.deviceTypeId ?? initial?.deviceType?.id ?? deviceTypes[0]?.id ?? ""
   );
+  const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
   const [busy, setBusy]   = useState(false);
-
-  function handleName(v: string) {
-    setName(v);
-    if (!initial) setSlug(v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !slug.trim()) { toast.error("Name and slug are required."); return; }
+    if (!name.trim()) { toast.error("Model name is required."); return; }
+    if (!deviceTypeId) { toast.error("Pick a device type."); return; }
     setBusy(true);
     try {
       let result: ApiDeviceModel;
       if (initial) {
-        const payload: UpdateDeviceModelPayload = { name: name.trim(), slug: slug.trim(), type };
+        const payload: UpdateDeviceModelPayload = {
+          name: name.trim(),
+          deviceTypeId,
+          imageUrl: imageUrl.trim() || undefined,
+        };
         result = await adminService.updateDeviceModel(initial.id, payload);
         toast.success("Model updated.");
       } else {
         const payload: CreateDeviceModelPayload = {
-          brandId, name: name.trim(), slug: slug.trim(), type, year: new Date().getFullYear(),
+          brandId,
+          deviceTypeId,
+          name: name.trim(),
+          imageUrl: imageUrl.trim() || undefined,
         };
         result = await adminService.createDeviceModel(payload);
         toast.success("Model created.");
@@ -183,24 +211,72 @@ function ModelForm({
     <form onSubmit={submit} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="m-name">Model name</Label>
-        <Input id="m-name" value={name} onChange={(e) => handleName(e.target.value)} placeholder="e.g. iPhone 17 Pro" required />
+        <Input id="m-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. iPhone 19" required />
+        <p className="text-xs text-muted-foreground">The URL slug is auto-generated from the name.</p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="m-slug">Slug</Label>
-        <Input id="m-slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="e.g. iphone-17-pro" required />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="m-type">Type</Label>
+        <Label htmlFor="m-type">Device type</Label>
         <select
           id="m-type"
-          value={type}
-          onChange={(e) => setType(e.target.value as typeof MODEL_TYPES[number])}
+          value={deviceTypeId}
+          onChange={(e) => setDeviceTypeId(e.target.value)}
           className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          required
         >
-          {MODEL_TYPES.map((t) => (
-            <option key={t} value={t}>{typeLabel(t)}</option>
+          <option value="" disabled>Select a type…</option>
+          {deviceTypes.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="m-image">Image URL (optional)</Label>
+        <Input id="m-image" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" />
+      </div>
+      <div className="flex justify-end gap-2 pt-1">
+        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button type="submit" disabled={busy}>{busy ? "Saving…" : initial ? "Update" : "Create"}</Button>
+      </div>
+    </form>
+  );
+}
+
+// ─── Device type form ─────────────────────────────────────────────────────────
+
+function DeviceTypeForm({
+  initial, onSave, onClose,
+}: {
+  initial?: ApiDeviceType;
+  onSave: (t: ApiDeviceType) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { toast.error("Type name is required."); return; }
+    setBusy(true);
+    try {
+      const result = initial
+        ? await adminService.updateDeviceType(initial.id, { name: name.trim() })
+        : await adminService.createDeviceType({ name: name.trim() });
+      toast.success(initial ? "Device type updated." : "Device type created.");
+      onSave(result);
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save device type.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <div className="space-y-1.5">
+        <Label htmlFor="t-name">Type name</Label>
+        <Input id="t-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Smartwatch" required />
+        <p className="text-xs text-muted-foreground">The URL slug is auto-generated from the name.</p>
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -247,15 +323,16 @@ function ModelRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const Icon    = TYPE_ICON[model.type ?? ""] ?? Cpu;
-  const chipCls = TYPE_CHIP[model.type ?? ""] ?? "bg-muted text-muted-foreground";
+  const slug = modelTypeSlug(model);
+  const Icon    = typeIcon(slug);
+  const chipCls = typeChip(slug);
 
   return (
     <tr className="group border-b last:border-0 hover:bg-muted/30 transition-colors">
       <td className="py-3 pl-4 pr-3">
         <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold", chipCls)}>
           <Icon className="size-3" aria-hidden="true" />
-          {typeLabel(model.type)}
+          {modelTypeName(model)}
         </span>
       </td>
       <td className="py-3 px-3 font-medium text-sm">{model.name}</td>
@@ -292,7 +369,7 @@ function ModelRow({
 // ─── BrandCard ────────────────────────────────────────────────────────────────
 
 function BrandCard({
-  brand, models, loading, defaultOpen,
+  brand, models, loading, defaultOpen, deviceTypes,
   onBrandEdit, onBrandDelete,
   onModelCreated, onModelUpdated, onModelDeleted,
 }: {
@@ -300,6 +377,7 @@ function BrandCard({
   models: ApiDeviceModel[];
   loading: boolean;
   defaultOpen: boolean;
+  deviceTypes: ApiDeviceType[];
   onBrandEdit: () => void;
   onBrandDelete: () => void;
   onModelCreated: (m: ApiDeviceModel) => void;
@@ -313,9 +391,15 @@ function BrandCard({
   const [editModel,   setEditModel]   = useState<ApiDeviceModel | null>(null);
   const [deleteModel, setDeleteModel] = useState<ApiDeviceModel | null>(null);
 
-  const phones  = models.filter((m) => m.type === "PHONE");
-  const tablets = models.filter((m) => m.type === "TABLET");
-  const laptops = models.filter((m) => m.type === "LAPTOP");
+  // Per-type counts, driven by the live device types
+  const counts = useMemo(() => {
+    const map: Record<string, number> = {};
+    models.forEach((m) => {
+      const slug = modelTypeSlug(m);
+      if (slug) map[slug] = (map[slug] ?? 0) + 1;
+    });
+    return map;
+  }, [models]);
 
   return (
     <>
@@ -338,21 +422,16 @@ function BrandCard({
             </div>
             {/* Type counts */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {phones.length > 0 && (
-                <span className={cn("hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", TYPE_CHIP.PHONE)}>
-                  <Smartphone className="size-3" />{phones.length}
-                </span>
-              )}
-              {tablets.length > 0 && (
-                <span className={cn("hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", TYPE_CHIP.TABLET)}>
-                  <Tablet className="size-3" />{tablets.length}
-                </span>
-              )}
-              {laptops.length > 0 && (
-                <span className={cn("hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", TYPE_CHIP.LAPTOP)}>
-                  <Laptop className="size-3" />{laptops.length}
-                </span>
-              )}
+              {deviceTypes.map((t) => {
+                const n = counts[t.slug] ?? 0;
+                if (n === 0) return null;
+                const Icon = typeIcon(t.slug);
+                return (
+                  <span key={t.id} className={cn("hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", typeChip(t.slug))}>
+                    <Icon className="size-3" aria-hidden="true" />{n}
+                  </span>
+                );
+              })}
               <span className="text-xs text-muted-foreground tabular-nums">
                 {loading ? "…" : `${models.length} model${models.length !== 1 ? "s" : ""}`}
               </span>
@@ -393,9 +472,10 @@ function BrandCard({
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Scrolls past 5 rows (~5 × 45px); header sticks */}
+                <div className="max-h-60 overflow-auto">
                   <table className="w-full text-sm">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-card">
                       <tr className="border-b text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                         <th className="py-2 pl-4 pr-3">Type</th>
                         <th className="py-2 px-3">Model</th>
@@ -437,6 +517,7 @@ function BrandCard({
         <Modal title={`Add model to ${brand.name}`} onClose={() => setAddModel(false)}>
           <ModelForm
             brandId={brand.id}
+            deviceTypes={deviceTypes}
             onSave={(m) => { onModelCreated(m); setAddModel(false); }}
             onClose={() => setAddModel(false)}
           />
@@ -446,6 +527,7 @@ function BrandCard({
         <Modal title="Edit model" onClose={() => setEditModel(null)}>
           <ModelForm
             brandId={brand.id}
+            deviceTypes={deviceTypes}
             initial={editModel}
             onSave={(m) => { onModelUpdated(m); setEditModel(null); }}
             onClose={() => setEditModel(null)}
@@ -472,13 +554,18 @@ function BrandCard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 8;
+
 export default function AdminDevicesPage() {
   const [brands,        setBrands]        = useState<ApiBrand[]>([]);
   const [modelMap,      setModelMap]      = useState<Record<string, ApiDeviceModel[]>>({});
+  const [deviceTypes,   setDeviceTypes]   = useState<ApiDeviceType[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(true);
   const [loadingModels, setLoadingModels] = useState<Record<string, boolean>>({});
   const [error,         setError]         = useState<string | null>(null);
   const [search,        setSearch]        = useState("");
+  const [typeFilter,    setTypeFilter]    = useState<string>("ALL");
+  const [page,          setPage]          = useState(1);
   const [refreshKey,    setRefreshKey]    = useState(0);
 
   // Brand modal state
@@ -486,11 +573,18 @@ export default function AdminDevicesPage() {
   const [editBrand,   setEditBrand]   = useState<ApiBrand | null>(null);
   const [deleteBrand, setDeleteBrand] = useState<ApiBrand | null>(null);
 
-  // Load brands + all their models
+  // Device type modal state
+  const [addType, setAddType] = useState(false);
+
+  // Load device types + brands + all their models
   useEffect(() => {
     let cancelled = false;
     setLoadingBrands(true);
     setError(null);
+
+    devicesService.getDeviceTypes()
+      .then((types) => { if (!cancelled) setDeviceTypes(types.filter((t) => t.isActive)); })
+      .catch(() => { if (!cancelled) setDeviceTypes([]); });
 
     adminService.listBrands()
       .then((data) => {
@@ -521,17 +615,32 @@ export default function AdminDevicesPage() {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  // Search filter
+  // Reset to page 1 when search or type filter changes
+  useEffect(() => { setPage(1); }, [search, typeFilter]);
+
   const q = search.trim().toLowerCase();
+
+  // 1. Filter brands by search + type filter
   const filteredBrands = useMemo(() => {
-    if (!q) return brands;
     return brands.filter((b) => {
+      const models = modelMap[b.slug] ?? [];
+
+      // Type filter: brand must have at least one model of the selected type
+      if (typeFilter !== "ALL") {
+        const hasType = models.some((m) => modelTypeSlug(m) === typeFilter);
+        if (!hasType) return false;
+      }
+
+      // Search filter
+      if (!q) return true;
       if (b.name.toLowerCase().includes(q) || b.slug.toLowerCase().includes(q)) return true;
-      return (modelMap[b.slug] ?? []).some(
-        (m) => m.name.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q)
-      );
+      return models.some((m) => m.name.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q));
     });
-  }, [brands, modelMap, q]);
+  }, [brands, modelMap, q, typeFilter]);
+
+  // 2. Paginate
+  const totalPages = Math.max(1, Math.ceil(filteredBrands.length / PAGE_SIZE));
+  const pagedBrands = filteredBrands.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const totalModels = useMemo(
     () => Object.values(modelMap).reduce((n, arr) => n + arr.length, 0),
@@ -566,6 +675,11 @@ export default function AdminDevicesPage() {
     );
   }
 
+  const TYPE_FILTERS = [
+    { value: "ALL", label: "All types", chip: undefined as string | undefined },
+    ...deviceTypes.map((t) => ({ value: t.slug, label: t.name + "s", chip: typeChip(t.slug) })),
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -577,6 +691,9 @@ export default function AdminDevicesPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAddType(true)}>
+            <Plus className="size-3.5" /> Add type
+          </Button>
           <Button size="sm" className="gap-1.5" onClick={() => setAddBrand(true)}>
             <Plus className="size-3.5" /> Add brand
           </Button>
@@ -586,33 +703,62 @@ export default function AdminDevicesPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search brands or models…" className="h-10 pl-9" />
+      {/* Search + type filter */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search brands or models…" className="h-10 pl-9" />
+        </div>
+
+        {/* Type filter chips */}
+        <div className="flex items-center gap-1.5">
+          {TYPE_FILTERS.map(({ value, label, chip }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setTypeFilter(value)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-semibold transition-all",
+                typeFilter === value
+                  ? value === "ALL"
+                    ? "bg-foreground text-background border-foreground"
+                    : cn(chip, "border-transparent")
+                  : "hover:bg-muted text-muted-foreground"
+              )}
+            >
+              {value !== "ALL" && (() => {
+                const Icon = typeIcon(value);
+                return <Icon className="mr-1 inline-block size-3 align-middle" aria-hidden="true" />;
+              })()}
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* List */}
+      {/* Brand list */}
       {loadingBrands ? (
         <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
         </div>
-      ) : filteredBrands.length === 0 ? (
+      ) : pagedBrands.length === 0 ? (
         <div className="rounded-xl border bg-card px-6 py-12 text-center">
           <Cpu className="mx-auto mb-3 size-8 text-muted-foreground" />
-          <p className="font-semibold">No results for &ldquo;{search}&rdquo;</p>
+          <p className="font-semibold">
+            {search || typeFilter !== "ALL" ? "No results found" : "No brands yet"}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredBrands.map((brand, i) => {
-            const models = modelMap[brand.slug] ?? [];
-            const displayModels = q
-              ? models.filter((m) =>
-                  m.name.toLowerCase().includes(q) ||
-                  m.slug.toLowerCase().includes(q) ||
-                  brand.name.toLowerCase().includes(q)
-                )
-              : models;
+          {pagedBrands.map((brand, i) => {
+            const allModels = modelMap[brand.slug] ?? [];
+
+            // Filter displayed models by type + search
+            const displayModels = allModels.filter((m) => {
+              const matchesType = typeFilter === "ALL" || modelTypeSlug(m) === typeFilter;
+              const matchesQ = !q || m.name.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q) || brand.name.toLowerCase().includes(q);
+              return matchesType && matchesQ;
+            });
 
             return (
               <BrandCard
@@ -620,7 +766,8 @@ export default function AdminDevicesPage() {
                 brand={brand}
                 models={displayModels}
                 loading={loadingModels[brand.slug] ?? false}
-                defaultOpen={i === 0}
+                defaultOpen={i === 0 && page === 1}
+                deviceTypes={deviceTypes}
                 onBrandEdit={() => setEditBrand(brand)}
                 onBrandDelete={() => setDeleteBrand(brand)}
                 onModelCreated={(m) => handleModelCreated(brand.slug, m)}
@@ -632,7 +779,55 @@ export default function AdminDevicesPage() {
         </div>
       )}
 
+      {/* Pagination */}
+      {!loadingBrands && totalPages > 1 && (
+        <div className="flex items-center justify-between border-t pt-4 text-sm">
+          <p className="text-muted-foreground">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredBrands.length)} of {filteredBrands.length} brands
+          </p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              Previous
+            </Button>
+            {/* Page number pills */}
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    "grid size-8 place-items-center rounded-md text-xs font-medium transition-colors",
+                    p === page
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted text-muted-foreground"
+                  )}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── Brand modals ── */}
+      {addType && (
+        <Modal title="Add device type" onClose={() => setAddType(false)}>
+          <DeviceTypeForm
+            onSave={(t) => {
+              setDeviceTypes((prev) =>
+                [...prev.filter((x) => x.id !== t.id), t].sort((a, b) => a.name.localeCompare(b.name))
+              );
+              setAddType(false);
+            }}
+            onClose={() => setAddType(false)}
+          />
+        </Modal>
+      )}
       {addBrand && (
         <Modal title="Add brand" onClose={() => setAddBrand(false)}>
           <BrandForm

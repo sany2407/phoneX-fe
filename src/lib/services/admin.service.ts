@@ -5,6 +5,7 @@ import { api } from "@/lib/api-client";import type {
   ApiVariant,
   ApiBrand,
   ApiDeviceModel,
+  ApiDeviceType,
   ApiCategory,
   ApiCoupon,
   ApiReview,
@@ -73,19 +74,15 @@ export interface UpdateBrandPayload extends Partial<CreateBrandPayload> {}
 
 export interface CreateDeviceModelPayload {
   brandId: string;
+  deviceTypeId: string;
   name: string;
-  slug: string;
-  type: "PHONE" | "LAPTOP" | "TABLET";
-  year: number;
-  isPopular?: boolean;
+  imageUrl?: string;
 }
 
 export interface UpdateDeviceModelPayload {
   name?: string;
-  slug?: string;
-  type?: "PHONE" | "LAPTOP" | "TABLET";
-  year?: number;
-  isPopular?: boolean;
+  deviceTypeId?: string;
+  imageUrl?: string;
   isActive?: boolean;
 }
 
@@ -292,6 +289,31 @@ export const adminService = {
   /** DELETE /admin/devices/models/:id */
   deleteDeviceModel(id: string): Promise<void> {
     return api.delete<void>(`/admin/devices/models/${id}`);
+  },
+
+  // ── Device types ───────────────────────────────────────────────────────────
+
+  /** GET /admin/devices/types (all, including inactive) */
+  listAllDeviceTypes(): Promise<ApiDeviceType[]> {
+    return api.get<ApiDeviceType[]>("/admin/devices/types");
+  },
+
+  /** POST /admin/devices/types */
+  createDeviceType(payload: { name: string }): Promise<ApiDeviceType> {
+    return api.post<ApiDeviceType>("/admin/devices/types", payload);
+  },
+
+  /** PUT /admin/devices/types/:id */
+  updateDeviceType(
+    id: string,
+    payload: { name?: string; isActive?: boolean }
+  ): Promise<ApiDeviceType> {
+    return api.put<ApiDeviceType>(`/admin/devices/types/${id}`, payload);
+  },
+
+  /** DELETE /admin/devices/types/:id */
+  deactivateDeviceType(id: string): Promise<void> {
+    return api.delete<void>(`/admin/devices/types/${id}`);
   },
 
   // ── Categories ─────────────────────────────────────────────────────────────

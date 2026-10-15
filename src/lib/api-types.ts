@@ -78,13 +78,26 @@ export interface ApiDeviceModel {
   id: string;
   brandId: string;
   brand?: ApiBrand;
+  deviceTypeId?: string | null;
+  deviceType?: ApiDeviceType | null;
   name: string;
   slug: string;
-  type: "PHONE" | "LAPTOP" | "TABLET" | undefined;
-  year: number;
-  isPopular: boolean;
+  imageUrl?: string | null;
+  /** Legacy — the API no longer sends this; use deviceType instead. */
+  type?: "PHONE" | "LAPTOP" | "TABLET";
+  year?: number;
+  isPopular?: boolean;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface ApiDeviceType {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
+  _count?: { models: number };
 }
 
 // ---------------------------------------------------------------------------

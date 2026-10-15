@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { Layers, Pencil, Plus, RefreshCw, Search, Tag, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { ImagePlus, Layers, Link2, Pencil, Plus, RefreshCw, Search, Tag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminService,
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { uploadSingle } from "@/lib/services/upload.service";
 import { cn } from "@/lib/utils";
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
@@ -56,6 +57,9 @@ function CategoryForm({
   const [slug,        setSlug]        = useState(initial?.slug ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [image,       setImage]       = useState(initial?.imageUrl ?? initial?.image ?? "");
+  const [mode,        setMode]        = useState<"link" | "upload">("link");
+  const [uploading,   setUploading]   = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [busy,        setBusy]        = useState(false);
 
   function handleName(v: string) {
@@ -132,25 +136,99 @@ function CategoryForm({
           placeholder="Short description…"
         />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="cat-img">Image URL (optional)</Label>
-        <Input
-          id="cat-img"
-          value={image}
-          onChange={(e) => setImage(e.target.value)}
-          placeholder="https://…"
-        />
-        {/* Live preview */}
+      <div className="space-y-2">
+        <Label>Category image (optional)</Label>
+        {/* Link ⇄ Upload toggle */}
+        <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="Image source">
+          {(
+            [
+              { value: "link", label: "Paste link", Icon: Link2 },
+              { value: "upload", label: "Upload file", Icon: ImagePlus },
+            ] as const
+          ).map(({ value, label, Icon }) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={mode === value}
+              onClick={() => setMode(value)}
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+                mode === value
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="size-3.5" aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "link" ? (
+          <Input
+            id="cat-img"
+            value={image}
+            onChange={(e) => setImage(e.target.value)}
+            placeholder="https://…"
+          />
+        ) : (
+          <>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              aria-label="Choose category image to upload"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                setUploading(true);
+                try {
+                  const url = await uploadSingle(file, "categories");
+                  setImage(url);
+                  toast.success("Image uploaded to Cloudinary.");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Upload failed.");
+                } finally {
+                  setUploading(false);
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-1.5"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+            >
+              <ImagePlus className="size-4" aria-hidden="true" />
+              {uploading ? "Uploading…" : image ? "Replace uploaded image" : "Choose image (PNG, JPG, WebP)"}
+            </Button>
+            <p className="text-xs text-muted-foreground">Uploads to the Cloudinary <span className="font-mono">categories</span> folder.</p>
+          </>
+        )}
+
+        {/* Live preview — works for both link and uploaded images */}
         {image.trim() && (
           <div className="mt-2 flex items-center gap-3 rounded-xl border bg-muted/40 p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              key={image.trim()}
               src={image.trim()}
               alt="Preview"
               className="size-14 rounded-lg border object-cover shadow-sm"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
             <p className="text-xs text-muted-foreground break-all line-clamp-2">{image.trim()}</p>
+            <button
+              type="button"
+              onClick={() => setImage("")}
+              className="ml-auto shrink-0 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              Remove
+            </button>
           </div>
         )}
       </div>
