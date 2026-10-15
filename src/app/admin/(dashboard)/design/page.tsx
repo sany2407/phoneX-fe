@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Design System",
   description:
     "phoneX brand tokens: color, typography, spacing, shape and the components used across the store.",
-  alternates: { canonical: "/design" },
+  alternates: { canonical: "/admin/design" },
 };
 
 // ─── Color groups ─────────────────────────────────────────────────────────────

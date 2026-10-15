@@ -10,7 +10,7 @@ import type { ApiCategory } from "@/lib/api-types";
 
 async function fetchApiCategories(): Promise<ApiCategory[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
     const res  = await fetch(`${base}/categories`, {
       next: { revalidate: 300 }, // revalidate every 5 minutes
     });

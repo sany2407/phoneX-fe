@@ -129,8 +129,11 @@ export default function AdminInventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item) => (
-                  <tr key={item.variantId} className={cn(
+                {filtered.map((item, index) => (
+                  // Composite key: the API can return the same variantId more
+                  // than once, and bare variantId keys collide (React warning).
+                  // filtered preserves source order, so the index tiebreak is stable.
+                  <tr key={`${item.variantId}::${item.product.id}::${item.deviceModel.id}::${index}`} className={cn(
                     "border-b last:border-0 hover:bg-muted/30 transition-colors",
                     item.stock === 0 && "bg-red-50/40",
                     item.stock > 0 && item.stock <= 5 && "bg-amber-50/40"

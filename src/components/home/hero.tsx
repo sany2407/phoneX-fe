@@ -15,7 +15,7 @@ const SLIDES: [
 ];
 
 const STATS = [
-  { value: "1M+",  label: "skins shipped" },
+  { value: "10K+",  label: "skins shipped" },
   { value: "50+",  label: "devices" },
   { value: "4.8★", label: "avg rating" },
 ];
@@ -54,7 +54,7 @@ export function Hero() {
           {/* Eyebrow */}
           <div className="animate-fade-up [animation-delay:0ms]">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-[11px] font-medium tracking-wide text-white/60 backdrop-blur-sm">
-              <Sparkles className="size-3 text-primary" aria-hidden="true" />
+              {/* <Sparkles className="size-3 text-primary" aria-hidden="true" /> */}
               500+ designs · Custom studio built in
             </span>
           </div>

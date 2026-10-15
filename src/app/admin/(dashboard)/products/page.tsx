@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Box, ChevronDown, ChevronRight, Image as ImageIcon,
   Package, Pencil, Plus, RefreshCw, Search, Trash2, X,
@@ -77,7 +78,9 @@ function Modal({ title, wide = false, onClose, children }: {
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
-  return (
+  // Portaled to document.body: callers render <Modal> inside table rows,
+  // and a <div> under <tbody> is invalid HTML (hydration error).
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className={cn(
@@ -92,7 +95,8 @@ function Modal({ title, wide = false, onClose, children }: {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

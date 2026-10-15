@@ -13,6 +13,7 @@ import { usePathname, useRouter } from "next/navigation";import {
   Menu,
   MessageSquare,
   Package,
+  Palette,
   Percent,
   ShieldCheck,
   Tag,
@@ -48,6 +49,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/reviews",      label: "Reviews",    icon: MessageSquare },
   { href: "/admin/users",        label: "Users",      icon: Users },
   { href: "/admin/analytics",    label: "Analytics",  icon: BarChart3 },
+  { href: "/admin/design",       label: "Design",     icon: Palette },
 ];
 
 // ---------------------------------------------------------------------------
@@ -324,7 +326,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              className="text-xs font-bold text-muted-foreground hover:text-foreground hover:underline"
             >
               View store ↗
             </Link>

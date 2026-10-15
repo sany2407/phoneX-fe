@@ -111,15 +111,15 @@ export function Navbar() {
                       "text-foreground/60 hover:text-foreground",
                       isActive && "text-foreground",
                       item.accent &&
-                        "text-primary hover:text-primary/80 font-semibold"
+                        "text-primary hover:text-primary/80 font-bold"
                     )}
                   >
-                    {item.accent && (
+                    {/* {item.accent && (
                       <Sparkles
                         className="mr-1 inline-block size-3 align-middle"
                         aria-hidden="true"
                       />
-                    )}
+                    )} */}
                     {item.label}
                     {/* active underline pill */}
                     {isActive && (
