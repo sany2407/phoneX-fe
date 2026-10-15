@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
-  Box, ChevronDown, ChevronRight, Image as ImageIcon,
-  Package, Pencil, Plus, RefreshCw, Search, Trash2, X,
+  Box, ChevronDown, ChevronRight, Image as ImageIcon, Loader2,
+  Package, Pencil, Plus, RefreshCw, Search, Trash2, Upload, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
+import { uploadMultiple } from "@/lib/services/upload.service";
 import type { ApiCategory, ApiDeviceModel } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -119,6 +120,24 @@ function ProductForm({ initial, categories, onSave, onClose }: {
   const [isFeatured, setFeatured]  = useState(initial?.isFeatured ?? false);
   const [busy,       setBusy]      = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const urls = await uploadMultiple(Array.from(files), "products");
+      setImages((prev) => [...prev, ...urls]);
+      toast.success(`${urls.length} image${urls.length > 1 ? "s" : ""} uploaded.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   function addImage() {
     const url = imageInput.trim();
     if (!url) return;
@@ -182,30 +201,69 @@ function ProductForm({ initial, categories, onSave, onClose }: {
       {/* Design images */}
       <div className="space-y-1.5">
         <Label>Design images</Label>
+
+        {/* Upload from device */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2 border-dashed h-11"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <><Loader2 className="size-4 animate-spin" /> Uploading…</>
+          ) : (
+            <><Upload className="size-4" /> Upload images (up to 10)</>
+          )}
+        </Button>
+
+        {/* Or paste a URL */}
         <div className="flex gap-2">
-          <Input value={imageInput} onChange={(e) => setImageInput(e.target.value)}
-            placeholder="https://… paste image URL"
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())} />
+          <Input
+            value={imageInput}
+            onChange={(e) => setImageInput(e.target.value)}
+            placeholder="Or paste a URL and press Add"
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())}
+          />
           <Button type="button" variant="outline" onClick={addImage} className="shrink-0">
             Add
           </Button>
         </div>
+
+        {/* Thumbnails */}
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {images.map((url, i) => (
               <div key={i} className="group relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="size-16 rounded-lg border object-cover" />
-                <button type="button"
+                {i === 0 && (
+                  <span className="absolute -bottom-1 left-0 right-0 text-center text-[9px] font-bold text-primary">
+                    PRIMARY
+                  </span>
+                )}
+                <button
+                  type="button"
                   onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
-                  className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
                   <X className="size-3" />
                 </button>
               </div>
             ))}
           </div>
         )}
-        <p className="text-xs text-muted-foreground">Paste image URLs one at a time. First image is the primary.</p>
+        <p className="text-xs text-muted-foreground">
+          Files go to Cloudinary. First image is the primary.
+        </p>
       </div>
 
       {/* Featured */}
