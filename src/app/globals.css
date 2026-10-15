@@ -178,6 +178,7 @@
     @apply min-w-0 overflow-x-clip bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
     text-rendering: optimizeLegibility;
+    scrollbar-gutter: stable;
   }
   ::selection {
     background: var(--primary);

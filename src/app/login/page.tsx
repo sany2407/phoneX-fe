@@ -56,17 +56,14 @@ export default function LoginPage() {
         {/* Phone visual — cropped off the bottom-right corner */}
         <div
           aria-hidden="true"
-          className="absolute -bottom-20 right-2 h-[500px] w-[250px] rotate-[8deg] drop-shadow-[0_24px_48px_rgba(0,0,0,0.35)]"
+          className="absolute -bottom-24 -right-4 h-[640px] w-[340px] rotate-[6deg] drop-shadow-[0_24px_64px_rgba(0,0,0,0.30)]"
         >
-          {/* Motion ticks */}
-          <span className="absolute -left-7 top-2 h-5 w-1 rotate-[24deg] rounded-full bg-foreground/70" />
-          <span className="absolute -left-3 top-6 h-3 w-1 rotate-[24deg] rounded-full bg-foreground/50" />
           <Image
             src="/samsung-login.png"
             alt=""
             fill
-            sizes="250px"
-            className="object-cover"
+            sizes="340px"
+            className="object-contain object-bottom"
             priority
           />
         </div>

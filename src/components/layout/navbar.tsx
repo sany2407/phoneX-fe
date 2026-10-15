@@ -52,7 +52,7 @@ export function Navbar() {
   const signOut     = useAuth((s) => s.signOut);
 
   return (
-    <header className="sticky top-0 z-50 min-w-0 overflow-x-clip">
+    <header className="sticky top-0 z-50 min-w-0">
       {/* ── Announcement bar ── */}
       <CouponMarquee />
 
