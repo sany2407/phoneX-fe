@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeviceCard } from "@/components/device/device-card";
 import { devicesService } from "@/lib/services/devices.service";
-import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
+import type { ApiBrand, ApiDeviceModel, ApiDeviceType } from "@/lib/api-types";
+import { ApiError } from "@/lib/api-client";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -14,34 +15,58 @@ const CATEGORY_TO_TYPE: Record<string, string> = {
   laptops: "laptop",
 };
 
-async function resolveSegment(slug: string): Promise<
+type Resolution =
   | { kind: "category"; typeSlug: string; typeName: string; models: ApiDeviceModel[] }
   | { kind: "brand"; brand: ApiBrand; models: ApiDeviceModel[] }
-  | null
-> {
+  | { kind: "failed" };
+
+/**
+ * Resolve a segment to a page. `null` means the segment genuinely does not
+ * exist (404); "failed" means the catalogue could not be reached, which must
+ * never be shown as "no models" or turned into a 404.
+ */
+async function resolveSegment(slug: string): Promise<Resolution | null> {
   if (CATEGORY_TO_TYPE[slug]) {
     const typeSlug = CATEGORY_TO_TYPE[slug];
-    const [types, models] = await Promise.all([
-      devicesService.getDeviceTypes().catch(() => []),
-      devicesService.getModelsByType(typeSlug).catch(() => []),
-    ]);
-    const typeName = types.find((t) => t.slug === typeSlug)?.name ?? typeSlug;
-    return { kind: "category", typeSlug, typeName, models };
+    try {
+      const [types, models] = await Promise.all([
+        devicesService.getDeviceTypes(),
+        devicesService.getModelsByType(typeSlug),
+      ]);
+      const typeName = types.find((t) => t.slug === typeSlug)?.name ?? typeSlug;
+      return { kind: "category", typeSlug, typeName, models };
+    } catch {
+      return { kind: "failed" };
+    }
   }
+
+  let types: ApiDeviceType[];
+  try {
+    types = await devicesService.getDeviceTypes();
+  } catch {
+    return { kind: "failed" };
+  }
+
   // Raw device-type slug (e.g. /devices/earbuds)
-  const types = await devicesService.getDeviceTypes().catch(() => []);
   if (types.some((t) => t.slug === slug)) {
     const typeName = types.find((t) => t.slug === slug)?.name ?? slug;
-    const models = await devicesService.getModelsByType(slug).catch(() => []);
-    return { kind: "category", typeSlug: slug, typeName, models };
+    try {
+      const models = await devicesService.getModelsByType(slug);
+      return { kind: "category", typeSlug: slug, typeName, models };
+    } catch {
+      return { kind: "failed" };
+    }
   }
+
   // Brand slug
   try {
-    const brand = await devicesService.getBrandBySlug(slug);
-    const models = await devicesService.getModelsForBrand(slug).catch(() => []);
+    const [brand, models] = await Promise.all([
+      devicesService.getBrandBySlug(slug),
+      devicesService.getModelsForBrand(slug),
+    ]);
     return { kind: "brand", brand, models };
-  } catch {
-    return null;
+  } catch (err) {
+    return err instanceof ApiError && err.isNotFound ? null : { kind: "failed" };
   }
 }
 
@@ -62,7 +87,7 @@ export const revalidate = 600;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const resolved = await resolveSegment(slug);
-  if (!resolved) return {};
+  if (!resolved || resolved.kind === "failed") return {};
   if (resolved.kind === "category") {
     return {
       title: `${resolved.typeName} Skins — Skins by Model`,
@@ -81,6 +106,23 @@ export default async function DeviceSegmentPage({ params }: Props) {
   const { slug } = await params;
   const resolved = await resolveSegment(slug);
   if (!resolved) notFound();
+
+  if (resolved.kind === "failed") {
+    return (
+      <div className="container-x py-10 lg:py-14">
+        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+          <ol className="flex gap-1.5">
+            <li><Link href="/devices" className="hover:text-foreground">Devices</Link></li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="font-medium capitalize text-foreground">{slug}</li>
+          </ol>
+        </nav>
+        <div className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-muted-foreground">
+          We couldn&apos;t load this device catalogue just now. Please refresh in a moment.
+        </div>
+      </div>
+    );
+  }
 
   if (resolved.kind === "category") {
     const { typeName, models } = resolved;

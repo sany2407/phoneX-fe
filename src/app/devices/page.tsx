@@ -29,14 +29,36 @@ function fallbackMeta(slug: string, name: string) {
   };
 }
 
+const TYPE_ORDER = ["smartphone", "tablet", "laptop", "earbuds", "smartwatch"];
+
+/**
+ * Prerendered but refreshed, so a build that happens while the API is down
+ * heals itself instead of shipping a baked-in error notice.
+ */
+export const revalidate = 300;
+
+/** Keep a failed call distinguishable from a genuinely empty one. */
+async function settle<T>(promise: Promise<T>): Promise<T | null> {
+  try {
+    return await promise;
+  } catch {
+    return null;
+  }
+}
+
 export default async function DevicesPage() {
-  const brands = await devicesService.getBrands().catch(() => []);
-  const byType = await Promise.all(
-    ["smartphone", "tablet", "laptop", "earbuds", "smartwatch"].map(async (typeSlug) => ({
-      typeSlug,
-      models: await devicesService.getModelsByType(typeSlug).catch(() => []),
-    }))
-  );
+  const [brandData, ...typeData] = await Promise.all([
+    settle(devicesService.getBrands()),
+    ...TYPE_ORDER.map((typeSlug) => settle(devicesService.getModelsByType(typeSlug))),
+  ]);
+
+  // A null means the request failed — never dress that up as "no devices".
+  const catalogFailed = brandData === null || typeData.some((models) => models === null);
+  const brands = brandData ?? [];
+  const byType = TYPE_ORDER.map((typeSlug, i) => ({
+    typeSlug,
+    models: typeData[i] ?? [],
+  }));
 
   // Attach brand info to each model for cards + links
   const brandById = new Map(brands.map((b) => [b.id, b]));
@@ -59,11 +81,22 @@ export default async function DevicesPage() {
         </p>
       </header>
 
+      {/* ── Load failure — never dress this up as "no devices" ── */}
+      {catalogFailed && (
+        <div className="mt-8 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-muted-foreground">
+          We couldn&apos;t load the device catalogue just now. Please refresh in a moment.
+        </div>
+      )}
+
       {/* ── Brand filter pills ── */}
       <ScrollReveal className="reveal mt-8" style={{ "--reveal-delay": "0ms" } as React.CSSProperties}>
         <p className="mb-3 text-label-sm text-muted-foreground">Browse by brand</p>
         {brands.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Brands are being added — check back soon.</p>
+          <p className="text-sm text-muted-foreground">
+            {catalogFailed
+              ? "Brands are unavailable while the catalogue is down."
+              : "Brands are being added — check back soon."}
+          </p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {brands.map((b) => (
