@@ -6,12 +6,8 @@ import { CategoryStrip } from "@/components/home/category-strip";
 import { CustomBanner } from "@/components/home/custom-banner";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import {
-  featuredSkins,
-  getModels,
-  newArrivals,
-  offerSkins,
-} from "@/lib/api";
+import { productsService } from "@/lib/services/products.service";
+import { devicesService } from "@/lib/services/devices.service";
 import { Button } from "@/components/ui/button";
 import { DeviceCard } from "@/components/device/device-card";
 
@@ -49,8 +45,12 @@ function SectionHeader({
 }
 
 export default async function HomePage() {
-  const featured = featuredSkins(8);
-  const fresh    = newArrivals(4);
+  const [featured, fresh, sale, liveModels] = await Promise.all([
+    productsService.list({ sort: "featured", limit: 8 }, { revalidate: 120 }).then((r) => r.items).catch(() => []),
+    productsService.list({ sort: "newest", limit: 4 }, { revalidate: 120 }).then((r) => r.items).catch(() => []),
+    productsService.list({ onSale: true, limit: 4, sort: "popular" }, { revalidate: 120 }).then((r) => r.items).catch(() => []),
+    devicesService.getModelsByType("smartphone").then((m) => m.slice(0, 3)).catch(() => []),
+  ]);
 
   return (
     <>
@@ -86,7 +86,13 @@ export default async function HomePage() {
           />
         </ScrollReveal>
         <ScrollReveal className="reveal mt-8" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
-          <ProductGrid skins={featured} />
+          {featured.length > 0 ? (
+            <ProductGrid products={featured} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              New drops are on the way — meanwhile, design your own in the studio.
+            </p>
+          )}
         </ScrollReveal>
         <Button variant="outline" size="lg" className="mt-10 w-full sm:hidden" asChild>
           <Link href="/shop">
@@ -109,24 +115,27 @@ export default async function HomePage() {
         </ScrollReveal>
 
         <ScrollReveal threshold={0.08}>
-          <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3">
-            {[
-              "apple-iphone-17-pro",
-              "samsung-galaxy-s26-ultra",
-              "apple-macbook-air-13-m4",
-            ]
-              .map((id) => getModels().find((m) => m.id === id))
-              .filter((m): m is NonNullable<typeof m> => Boolean(m))
-              .map((model, i) => (
-                <div
-                  key={model.id}
-                  className="reveal"
-                  style={{ "--reveal-delay": `${i * 80}ms` } as React.CSSProperties}
-                >
-                  <DeviceCard model={model} />
-                </div>
-              ))}
-          </div>
+          {liveModels.length > 0 ? (
+            <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3">
+              {liveModels.map((model, i) => {
+                const brand = model.brand;
+                if (!brand) return null;
+                return (
+                  <div
+                    key={model.id}
+                    className="reveal"
+                    style={{ "--reveal-delay": `${i * 80}ms` } as React.CSSProperties}
+                  >
+                    <DeviceCard brand={brand} model={model} />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-8 text-sm text-muted-foreground">
+              Devices are being added — browse all models instead.
+            </p>
+          )}
         </ScrollReveal>
 
         <ScrollReveal className="reveal mt-6" style={{ "--reveal-delay": "120ms" } as React.CSSProperties}>
@@ -153,7 +162,11 @@ export default async function HomePage() {
           />
         </ScrollReveal>
         <ScrollReveal className="reveal mt-8" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
-          <ProductGrid skins={fresh} columns={4} />
+          {fresh.length > 0 ? (
+            <ProductGrid products={fresh} columns={4} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Fresh drops landing soon.</p>
+          )}
         </ScrollReveal>
       </section>
 
@@ -169,7 +182,13 @@ export default async function HomePage() {
           />
         </ScrollReveal>
         <ScrollReveal className="reveal mt-8" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
-          <ProductGrid skins={offerSkins(4)} columns={4} />
+          {sale.length > 0 ? (
+            <ProductGrid products={sale} columns={4} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No sale items right now — <Link href="/shop" className="font-medium text-primary hover:underline">browse everything</Link> instead.
+            </p>
+          )}
         </ScrollReveal>
       </section>
     </>

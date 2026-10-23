@@ -1,28 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Tag } from "lucide-react";
-import type { ApiCoupon } from "@/lib/api-types";
-import { fetchPublicCoupons, couponLabel } from "@/lib/services/coupons-public";
+import { useCoupons } from "@/lib/stores/coupons-store";
+import { couponLabel } from "@/lib/services/coupons-public";
 
-const FALLBACK = "Free shipping over ₹499 · Extra 10% off with code PHONE10";
-
+/**
+ * Scrolling promo strip. Only renders when the backend actually has active
+ * coupons — no hardcoded fallback text.
+ */
 export function CouponMarquee() {
-  const [items,  setItems]  = useState<ApiCoupon[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const items = useCoupons((s) => s.publicCoupons);
+  const loaded = useCoupons((s) => s.loaded);
+  const load = useCoupons((s) => s.loadPublic);
 
   useEffect(() => {
-    fetchPublicCoupons().then((data) => {
-      setItems(data);
-      setLoaded(true);
-    });
-  }, []);
+    load();
+  }, [load]);
 
-  const labels: string[] = loaded && items.length > 0
-    ? items.map(couponLabel)
-    : [FALLBACK];
+  if (!loaded || items.length === 0) return null;
 
+  const labels = items.map(couponLabel);
   const scrollItems = [...labels, ...labels];
+  const duration = Math.max(labels.length * 8, 20);
 
   return (
     <div
@@ -41,7 +41,7 @@ export function CouponMarquee() {
       <div
         className="flex whitespace-nowrap"
         style={{
-          animation: `marquee-scroll ${Math.max(labels.length * 8, 20)}s linear infinite`,
+          animation: `marquee-scroll ${duration}s linear infinite`,
           willChange: "transform",
         }}
       >

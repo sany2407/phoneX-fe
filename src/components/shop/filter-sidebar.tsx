@@ -10,8 +10,6 @@ import {
   buildCatalogHref,
   toggleInList,
 } from "@/lib/catalog-query";
-import { getCategories, getFinishes, getMaterials } from "@/lib/api";
-import type { DeviceType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function Group({
@@ -36,7 +34,15 @@ const PRICE_BANDS = [
   { value: "1500", label: "Under ₹1,500" },
 ];
 
-export function FilterSidebar({ deviceType }: { deviceType?: DeviceType }) {
+export function FilterSidebar({
+  categories,
+  materials,
+  finishes,
+}: {
+  categories: { slug: string; name: string }[];
+  materials: string[];
+  finishes: string[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -52,10 +58,6 @@ export function FilterSidebar({ deviceType }: { deviceType?: DeviceType }) {
 
   const list = (key: string) =>
     (searchParams.get(key) ?? "").split(",").filter(Boolean);
-
-  const categories = getCategories();
-  const materials = getMaterials();
-  const finishes = getFinishes();
 
   const activeCount =
     list("category").length +
@@ -93,13 +95,16 @@ export function FilterSidebar({ deviceType }: { deviceType?: DeviceType }) {
 
       <Group title="Category">
         <div className="space-y-2.5">
+          {categories.length === 0 && (
+            <p className="text-sm text-muted-foreground">No categories yet.</p>
+          )}
           {categories.map((c) => (
-            <Label key={c.id} className="flex cursor-pointer items-center gap-2.5 text-sm font-normal">
+            <Label key={c.slug} className="flex cursor-pointer items-center gap-2.5 text-sm font-normal">
               <Checkbox
-                checked={list("category").includes(c.id)}
+                checked={list("category").includes(c.slug)}
                 onCheckedChange={() =>
                   update({
-                    category: toggleInList(list("category"), c.id).join(",") || null,
+                    category: toggleInList(list("category"), c.slug).join(",") || null,
                   })
                 }
               />
@@ -113,17 +118,20 @@ export function FilterSidebar({ deviceType }: { deviceType?: DeviceType }) {
 
       <Group title="Material">
         <div className="space-y-2.5">
-          {materials.map((mt) => (
-            <Label key={mt.id} className="flex cursor-pointer items-center gap-2.5 text-sm font-normal">
+          {materials.length === 0 && (
+            <p className="text-sm text-muted-foreground">No materials yet.</p>
+          )}
+          {materials.map((m) => (
+            <Label key={m} className="flex cursor-pointer items-center gap-2.5 text-sm font-normal capitalize">
               <Checkbox
-                checked={list("material").includes(mt.id)}
+                checked={list("material").includes(m)}
                 onCheckedChange={() =>
                   update({
-                    material: toggleInList(list("material"), mt.id).join(",") || null,
+                    material: toggleInList(list("material"), m).join(",") || null,
                   })
                 }
               />
-              {mt.label}
+              {m.replace("-", " ")}
             </Label>
           ))}
         </div>
@@ -133,17 +141,20 @@ export function FilterSidebar({ deviceType }: { deviceType?: DeviceType }) {
 
       <Group title="Finish">
         <div className="space-y-2.5">
+          {finishes.length === 0 && (
+            <p className="text-sm text-muted-foreground">No finishes yet.</p>
+          )}
           {finishes.map((f) => (
-            <Label key={f.id} className="flex cursor-pointer items-center gap-2.5 text-sm font-normal capitalize">
+            <Label key={f} className="flex cursor-pointer items-center gap-2.5 text-sm font-normal capitalize">
               <Checkbox
-                checked={list("finish").includes(f.id)}
+                checked={list("finish").includes(f)}
                 onCheckedChange={() =>
                   update({
-                    finish: toggleInList(list("finish"), f.id).join(",") || null,
+                    finish: toggleInList(list("finish"), f).join(",") || null,
                   })
                 }
               />
-              {f.label}
+              {f.replace("-", " ")}
             </Label>
           ))}
         </div>
@@ -194,9 +205,6 @@ export function FilterSidebar({ deviceType }: { deviceType?: DeviceType }) {
         />
         In stock only
       </Label>
-      {!deviceType && (
-        <p className="sr-only">Filter by device type from the tabs above.</p>
-      )}
     </form>
   );
 }

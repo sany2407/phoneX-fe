@@ -13,14 +13,13 @@ import { Separator } from "@/components/ui/separator";
 import { cartTotals, useCart } from "@/lib/stores/cart-store";
 import { useOrders } from "@/lib/stores/orders-store";
 import { useAuth } from "@/lib/stores/auth-store";
-import { couponsService } from "@/lib/services/coupons.service";
+import { useAddresses } from "@/lib/stores/addresses-store";
+import { useCoupons } from "@/lib/stores/coupons-store";
+import { couponDescription } from "@/lib/services/coupons-public";
 import { ordersService } from "@/lib/services/orders.service";
 import { paymentsService } from "@/lib/services/payments.service";
-import { addressesService } from "@/lib/services/addresses.service";
 import { toFrontendOrder } from "@/lib/stores/orders-store";
 import { ApiError } from "@/lib/api-client";
-import type { ValidateCouponResponse } from "@/lib/api-types";
-import type { Address } from "@/lib/types";
 import { formatINR, orderNumber } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -50,7 +49,7 @@ interface FormState {
   line1: string;
   city: string;
   state: string;
-  pincode: string;
+  postalCode: string;
 }
 
 const EMPTY: FormState = {
@@ -60,7 +59,7 @@ const EMPTY: FormState = {
   line1: "",
   city: "",
   state: "",
-  pincode: "",
+  postalCode: "",
 };
 
 // ---------------------------------------------------------------------------
@@ -113,13 +112,16 @@ export default function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Partial<FormState>>({});
 
-  // Coupon state
+  // Coupon (store-backed)
   const [couponInput, setCouponInput] = useState("");
-  const [couponResult, setCouponResult] = useState<ValidateCouponResponse | null>(null);
-  const [couponLoading, setCouponLoading] = useState(false);
+  const applied = useCoupons((s) => s.applied);
+  const applyCode = useCoupons((s) => s.apply);
+  const couponLoading = useCoupons((s) => s.applying);
 
-  // Address state
-  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  // Addresses (store-backed)
+  const savedAddresses = useAddresses((s) => s.items);
+  const fetchAddresses = useAddresses((s) => s.fetchAll);
+  const createAddress = useAddresses((s) => s.create);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   // Payment method
@@ -128,43 +130,32 @@ export default function CheckoutPage() {
   // Submission state
   const [submitting, setSubmitting] = useState(false);
 
-  // Load saved addresses when user is logged in
+  // Load saved addresses once the user is signed in
   useEffect(() => {
     if (!user) return;
-    addressesService.getAll().then((apiAddresses) => {
-      const addresses: Address[] = apiAddresses.map((a) => ({
-        id: a.id,
-        name: a.name,
-        label: a.label,
-        fullName: a.fullName,
-        phone: a.phone,
-        line1: [a.line1, a.line2].filter(Boolean).join(", "),
-        city: a.city,
-        state: a.state,
-        pincode: a.pincode,
-        isDefault: a.isDefault,
-      }));
-      setSavedAddresses(addresses);
-      const def = addresses.find((a) => a.isDefault) ?? addresses[0];
-      if (def) {
-        setSelectedAddressId(def.id);
-        setForm((f) => ({
-          ...f,
-          fullName: def.fullName || f.fullName,
-          phone: def.phone || f.phone,
-          line1: def.line1,
-          city: def.city,
-          state: def.state,
-          pincode: def.pincode,
-        }));
-      }
-    }).catch(() => {/* non-fatal */});
-  }, [user]);
+    fetchAddresses();
+  }, [user, fetchAddresses]);
+
+  // Pre-fill the form from the default address
+  useEffect(() => {
+    if (selectedAddressId || savedAddresses.length === 0) return;
+    const def = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
+    setSelectedAddressId(def.id);
+    setForm((f) => ({
+      ...f,
+      fullName: def.name || f.fullName,
+      phone: def.phone || f.phone,
+      line1: [def.line1, def.line2].filter(Boolean).join(", "),
+      city: def.city,
+      state: def.state,
+      postalCode: def.postalCode,
+    }));
+  }, [savedAddresses, selectedAddressId]);
 
   // ---- Totals ----
   const totals = cartTotals(items);
-  const discount = couponResult?.discount ?? 0;
-  const freeShipping = couponResult?.freeShipping ?? false;
+  const discount = applied?.discountAmount ?? 0;
+  const freeShipping = applied?.discountType === "FREE_SHIPPING";
   const shipping = freeShipping ? 0 : totals.shipping;
   const total = Math.max(0, totals.subtotal - discount + shipping);
 
@@ -179,7 +170,7 @@ export default function CheckoutPage() {
     if (!form.line1.trim()) e.line1 = "Address is required.";
     if (!form.city.trim()) e.city = "City is required.";
     if (!form.state.trim()) e.state = "State is required.";
-    if (!/^\d{6}$/.test(form.pincode)) e.pincode = "PIN code must be 6 digits.";
+    if (!/^\d{6}$/.test(form.postalCode)) e.postalCode = "PIN code must be 6 digits.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -189,23 +180,15 @@ export default function CheckoutPage() {
     const code = couponInput.trim().toUpperCase();
     if (!code) return;
 
-    setCouponLoading(true);
     try {
-      const result = await couponsService.validate({
-        code,
-        orderAmount: totals.subtotal,
-      });
-      setCouponResult(result);
-      toast.success(`${result.coupon.code} applied — ${result.coupon.label}`);
+      const result = await applyCode(code, totals.subtotal);
+      toast.success(`${result.coupon.code} applied — ${couponDescription(result.coupon)}`);
     } catch (err) {
       const msg =
         err instanceof ApiError
           ? err.message
           : `"${code}" is not a valid code.`;
       toast.error(msg);
-      setCouponResult(null);
-    } finally {
-      setCouponLoading(false);
     }
   }
 
@@ -215,15 +198,14 @@ export default function CheckoutPage() {
     if (selectedAddressId) return selectedAddressId;
 
     // Otherwise save the form values as a new address
-    const created = await addressesService.create({
+    const created = await createAddress({
       name: form.fullName,
-      label: "Home",
-      fullName: form.fullName,
       phone: form.phone,
       line1: form.line1,
       city: form.city,
       state: form.state,
-      pincode: form.pincode,
+      postalCode: form.postalCode,
+      country: "India",
     });
     return created.id;
   }
@@ -258,7 +240,7 @@ export default function CheckoutPage() {
       // 3. Create phonex order
       const apiOrder = await ordersService.checkout({
         addressId,
-        couponCode: couponResult?.coupon.code,
+        couponCode: applied?.coupon.code,
       });
 
       // 4. Create Razorpay payment order
@@ -375,12 +357,12 @@ export default function CheckoutPage() {
                   if (addr) {
                     setForm((f) => ({
                       ...f,
-                      fullName: addr.fullName,
+                      fullName: addr.name,
                       phone: addr.phone,
-                      line1: addr.line1,
+                      line1: [addr.line1, addr.line2].filter(Boolean).join(", "),
                       city: addr.city,
                       state: addr.state,
-                      pincode: addr.pincode,
+                      postalCode: addr.postalCode,
                     }));
                   }
                 }}
@@ -398,11 +380,12 @@ export default function CheckoutPage() {
                     <RadioGroupItem value={addr.id} className="mt-0.5" />
                     <span>
                       <span className="block text-sm font-medium">
-                        {addr.label} — {addr.fullName}
+                        {addr.isDefault ? "Default · " : ""}
+                        {addr.name}
                       </span>
                       <span className="block text-xs text-muted-foreground">
-                        {addr.line1}, {addr.city}, {addr.state} —{" "}
-                        {addr.pincode}
+                        {[addr.line1, addr.line2].filter(Boolean).join(", ")},{" "}
+                        {addr.city}, {addr.state} — {addr.postalCode}
                       </span>
                     </span>
                   </Label>
@@ -510,15 +493,15 @@ export default function CheckoutPage() {
                     disabled={submitting}
                   />
                   <Field
-                    id="pincode"
+                    id="postalCode"
                     label="PIN code"
                     inputMode="numeric"
                     autoComplete="postal-code"
-                    value={form.pincode}
+                    value={form.postalCode}
                     onChange={(e) =>
-                      setForm({ ...form, pincode: e.target.value })
+                      setForm({ ...form, postalCode: e.target.value })
                     }
-                    error={errors.pincode}
+                    error={errors.postalCode}
                     disabled={submitting}
                   />
                 </div>
@@ -633,10 +616,10 @@ export default function CheckoutPage() {
                 {couponLoading ? "…" : "Apply"}
               </Button>
             </div>
-            {couponResult && (
+            {applied && (
               <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-primary">
                 <ShieldCheck className="size-3.5" />
-                {couponResult.coupon.code} — {couponResult.coupon.label}
+                {applied.coupon.code} — {couponDescription(applied.coupon)}
               </p>
             )}
 
@@ -647,7 +630,7 @@ export default function CheckoutPage() {
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-primary">
-                  <dt>Discount ({couponResult?.coupon.code})</dt>
+                  <dt>Discount ({applied?.coupon.code})</dt>
                   <dd className="tabular-nums">−{formatINR(discount)}</dd>
                 </div>
               )}

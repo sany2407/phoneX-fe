@@ -3,77 +3,83 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { DeviceCard } from "@/components/device/device-card";
-import { DeviceProduct } from "@/components/device/device-product";
-import {
-  brandOf,
-  countForModel,
-  discountedPrice,
-  finalPrice,
-  getDesignImagesForModel,
-  getDeviceHero,
-  getDeviceImageSet,
-  getBrands,
-  getModel,
-  getModels,
-  getSkinsForModel,
-} from "@/lib/api";
+import { DeviceProduct, type DeviceSkinOption } from "@/components/device/device-product";
+import { devicesService } from "@/lib/services/devices.service";
+import { variantsService } from "@/lib/services/variants.service";
 
 type Props = { params: Promise<{ slug: string; model: string }> };
 
-export function generateStaticParams() {
-  const out: { slug: string; model: string }[] = [];
-  for (const b of getBrands()) {
-    for (const m of getModels({ brandId: b.id })) {
-      out.push({ slug: b.slug, model: m.slug });
-    }
-  }
-  return out;
+/**
+ * Device-model pages render on demand, not prerendered.
+ *
+ * Prerendering the whole catalog (~200 models) cost roughly 500 API calls per
+ * build — two per page plus `getModelsForBrand` — against a backend limit of
+ * 200 requests / 15 minutes. The build exhausted its own quota, so later pages
+ * were generated from rate-limited responses and cached as empty. Rendering on
+ * demand with `revalidate` keeps them cached without the build-time burst;
+ * `dynamicParams` is true by default, so every model still resolves.
+ */
+export async function generateStaticParams() {
+  return [];
 }
+
+/** On-demand renders are cached for ten minutes. */
+export const revalidate = 600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, model: modelSlug } = await params;
-  const model = getModel(slug, modelSlug);
-  if (!model) return {};
-  const count = countForModel(model);
-  const brand = brandOf(model);
-  return {
-    title: `${model.name} Skins & Wraps — ${count} Designs`,
-    description: `${count} precision-cut skins and wraps for ${brand.name} ${model.name}. Matte, carbon fiber, leather and more — free shipping over ₹499.`,
-    alternates: { canonical: `/devices/${slug}/${modelSlug}` },
-    openGraph: { title: `${model.name} Skins & Wraps | phoneX` },
-  };
+  try {
+    const { model, variants } = await variantsService.getSkinsForModel(slug, modelSlug);
+    const brandName = model.brand?.name ?? slug;
+    return {
+      title: `${model.name} Skins & Wraps — ${variants.length} Options`,
+      description: `${variants.length} precision-cut skins and wraps for ${brandName} ${model.name}. Free shipping over ₹499.`,
+      alternates: { canonical: `/devices/${slug}/${modelSlug}` },
+      openGraph: { title: `${model.name} Skins & Wraps | phoneX` },
+    };
+  } catch {
+    return {};
+  }
 }
 
 export default async function DeviceModelPage({ params }: Props) {
   const { slug, model: modelSlug } = await params;
-  const model = getModel(slug, modelSlug);
-  if (!model) notFound();
+  let data;
+  try {
+    data = await variantsService.getSkinsForModel(slug, modelSlug);
+  } catch {
+    notFound();
+  }
+  const { model, variants } = data;
+  const brand = model.brand;
+  if (!brand) notFound();
 
-  const brand = brandOf(model);
-  const imageSet = getDeviceImageSet(brand.slug, model.slug);
-  const hero = getDeviceHero(brand.slug, model.slug);
-  const skins = getSkinsForModel(model, { sort: "featured" });
-  const designImages = getDesignImagesForModel(brand.slug, model.slug, skins);
-  const options = skins.map((s) => ({
-    id: s.id,
-    name: s.name,
-    slug: s.slug,
-    colors: s.colors,
-    pattern: s.pattern,
-    price: discountedPrice(s, model.type),
-    original: s.discountPct > 0 ? finalPrice(s, model.type) : undefined,
-    inStock: s.inStock,
-    material: s.material,
-    finish: s.finish,
-    rating: s.rating,
-    reviews: s.reviews,
-  }));
+  const skins: DeviceSkinOption[] = variants
+    .map((v) => {
+      const price = Number(v.price);
+      const compare = v.comparePrice != null ? Number(v.comparePrice) : NaN;
+      // Prefer this variant's own phone mockups, then the product's flat artwork.
+      const images = [...(v.images ?? []), ...(v.product?.images ?? [])].filter(Boolean);
+      return {
+        variantId: v.id,
+        productId: v.product?.id ?? "",
+        productSlug: v.product?.slug ?? "",
+        name: v.product?.name ?? v.sku,
+        images: [...new Set(images)],
+        price: Number.isFinite(price) ? price : 0,
+        original: Number.isFinite(compare) && compare > price ? compare : undefined,
+        inStock: v.stock > 0,
+        material: v.product?.material ?? "",
+        finish: v.product?.finish ?? "",
+        rating: v.product?.rating ?? 0,
+        reviewCount: v.product?.reviewCount ?? 0,
+        category: v.product?.category ?? null,
+      };
+    })
+    .filter((s) => s.productId);
 
-  const sameBrand = getModels({ brandId: brand.id }).filter((m) => m.id !== model.id);
-  const others = getModels({ type: model.type }).filter(
-    (m) => m.id !== model.id && m.brandId !== brand.id
-  );
-  const related = [...sameBrand, ...others].slice(0, 4);
+  const sameBrand = await devicesService.getModelsForBrand(slug).catch(() => []);
+  const related = sameBrand.filter((m) => m.id !== model.id).slice(0, 4);
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -89,19 +95,18 @@ export default async function DeviceModelPage({ params }: Props) {
         </ol>
       </nav>
 
-      <DeviceProduct
-        key={model.id}
-        modelId={model.id}
-        modelName={model.name}
-        modelType={model.type}
-        brandId={brand.id}
-        brandName={brand.name}
-        brandSlug={brand.slug}
-        skins={options}
-        heroSrc={hero?.src}
-        gallerySrcs={imageSet?.gallery}
-        designImages={designImages}
-      />
+      <div className="mt-6">
+        <DeviceProduct
+          key={model.id}
+          modelId={model.id}
+          modelName={model.name}
+          brandId={brand.id}
+          brandName={brand.name}
+          brandSlug={brand.slug}
+          skins={skins}
+          heroSrc={model.imageUrl ?? undefined}
+        />
+      </div>
 
       {related.length > 0 ? (
         <section aria-labelledby="related-devices-heading" className="mt-20">
@@ -109,11 +114,15 @@ export default async function DeviceModelPage({ params }: Props) {
             You may also like
           </h2>
           <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
-            {related.map((m) => (
-              <li key={m.id}>
-                <DeviceCard model={m} />
-              </li>
-            ))}
+            {related.map((m) => {
+              const rb = m.brand ?? (m.brandId === brand.id ? brand : undefined);
+              if (!rb) return null;
+              return (
+                <li key={m.id}>
+                  <DeviceCard brand={rb} model={m} />
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}

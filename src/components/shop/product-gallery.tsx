@@ -1,92 +1,70 @@
 "use client";
 
 import { useState } from "react";
-import { DeviceFrame, LaptopFrame, PhoneFrame } from "@/components/artwork/device-frame";
+import { ImageOff } from "lucide-react";
 import { DevicePhoto } from "@/components/device/device-photo";
-import type { DeviceType, PatternId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type View = "front" | "detail" | "flat";
-
 export function ProductGallery({
-  colors,
-  pattern,
-  deviceType,
-  brand,
-  photoSrc,
+  images,
+  name,
 }: {
-  colors: [string, string];
-  pattern: PatternId;
-  deviceType: DeviceType;
-  brand: string;
-  photoSrc?: string;
+  images: string[];
+  name: string;
 }) {
-  const [view, setView] = useState<View>("front");
-  const VIEWS: [View, string][] = [
-    ["front", "On device"],
-    ["detail", "Close-up"],
-    ["flat", "Artwork"],
-  ];
+  const [active, setActive] = useState(0);
+  // Guard against an out-of-range index when the image set changes.
+  const safeActive = active < images.length ? active : 0;
+  const current = images[safeActive];
+
+  if (images.length === 0) {
+    return (
+      <div className="grid aspect-square place-items-center rounded-2xl border bg-secondary/60">
+        <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+          <ImageOff className="size-10" aria-hidden="true" />
+          <span className="max-w-[200px] text-center text-sm">
+            Photos coming soon for {name}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div
-        className={cn(
-          "relative grid aspect-[4/5] place-items-center overflow-hidden rounded-xl border p-8",
-          photoSrc && view === "front" ? "bg-[#f6e8e8] p-0" : "bg-secondary/70"
-        )}
-      >
-        {view === "front" && photoSrc ? (
+      <div className="relative overflow-hidden rounded-2xl glass shadow-glass bg-secondary/60">
+        <div className="relative aspect-square">
           <DevicePhoto
-            src={photoSrc}
-            alt=""
+            key={current}
+            src={current}
+            alt={`${name} skin`}
             sizes="(max-width: 1024px) 100vw, 50vw"
-            className="p-8"
+            className="p-6"
           />
-        ) : view === "front" ? (
-          <DeviceFrame type={deviceType} colors={colors} pattern={pattern} brand={brand} className="h-full" />
-        ) : null}
-        {view === "detail" && (
-          <div className="h-full w-full overflow-hidden rounded-lg border border-zinc-700/40 shadow-inner">
-            <div className="h-[200%] w-[200%] -translate-x-[30%] -translate-y-[25%]">
-              <DeviceFrame type={deviceType === "phone" ? "phone" : "laptop"} colors={colors} pattern={pattern} brand={brand} />
-            </div>
-          </div>
-        )}
-        {view === "flat" && (
-          <div className="h-full w-full overflow-hidden rounded-lg shadow-card-hover [&_svg]:rounded-lg">
-            <DeviceFrame
-              type={deviceType}
-              colors={colors}
-              pattern={pattern}
-              brand={brand}
-              className={cn("mx-auto", deviceType === "laptop" ? "w-full max-w-md" : "h-full")}
-            />
-          </div>
-        )}
+        </div>
       </div>
-
-      <div role="tablist" aria-label="Product views" className="mt-4 flex justify-center gap-2">
-        {VIEWS.map(([key, label]) => (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={view === key}
-            onClick={() => setView(key)}
-            className={cn(
-              "press rounded-lg border px-4 py-2 text-sm font-medium",
-              view === key
-                ? "border-transparent ring-2 ring-primary"
-                : "hover:bg-muted"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {images.length > 1 && (
+        <ul className="mt-3 grid grid-cols-5 gap-2.5">
+          {images.map((src, i) => (
+            <li key={`${src}-${i}`}>
+              <button
+                type="button"
+                onClick={() => setActive(i)}
+                aria-label={`View photo ${i + 1}`}
+                aria-pressed={safeActive === i}
+                className={cn(
+                  "relative aspect-square overflow-hidden rounded-lg border bg-secondary/60",
+                  safeActive === i
+                    ? "border-transparent ring-2 ring-primary"
+                    : "hover:border-transparent hover:shadow-card-hover"
+                )}
+              >
+                <DevicePhoto src={src} alt="" sizes="20vw" className="p-1.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
-
-// re-export for potential direct frame use in this feature
-export { PhoneFrame, LaptopFrame };

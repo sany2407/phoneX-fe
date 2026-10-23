@@ -1,43 +1,42 @@
 "use client";
 
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Check,
   ChevronDown,
   Laptop,
+  RefreshCw,
   Search,
   Smartphone,
   Tablet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getBrands, getModels, countForModel } from "@/lib/api";
-import type { DeviceModel, DeviceType } from "@/lib/types";
+import { type PickerModel } from "@/lib/live-devices";
+import { useDeviceCatalog } from "@/lib/stores/device-catalog-store";
+import { variantsService } from "@/lib/services/variants.service";
 import { cn } from "@/lib/utils";
 
 // ─── device type config ────────────────────────────────────────────────────
 
 const DEVICE_TYPES = [
   {
-    id: "phone"  as DeviceType,
+    id: "phone",
     label: "Phone Skins",
-    sublabel: "700+ designs · all models",
     icon: Smartphone,
     href: "/devices/phones",
   },
   {
-    id: "tablet" as DeviceType,
+    id: "tablet",
     label: "Tablet Skins",
-    sublabel: "iPad, Galaxy Tab & more",
     icon: Tablet,
     href: "/devices/tablets",
   },
   {
-    id: "laptop" as DeviceType,
+    id: "laptop",
     label: "Laptop Skins",
-    sublabel: "MacBook, Dell, HP & more",
     icon: Laptop,
     href: "/devices/laptops",
   },
@@ -225,20 +224,33 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
   const [searchQuery,     setSearchQuery]     = useState("");
   const [selectedBrandId, setSelectedBrandId] = useState("");
   const [selectedModelId, setSelectedModelId] = useState("");
+  const [optionsCount, setOptionsCount] = useState<number | null>(null);
 
-  const allModels = useMemo(() => getModels(), []);
-  const allBrands = useMemo(() => getBrands(), []);
+  const allBrands = useDeviceCatalog((s) => s.brands);
+  const allModels = useDeviceCatalog((s) => s.models);
+  const catalogStatus = useDeviceCatalog((s) => s.status);
+  const catalogError = useDeviceCatalog((s) => s.error);
+  const loadCatalog = useDeviceCatalog((s) => s.load);
+
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog]);
+
+  // A failed load must never be presented as an empty catalog.
+  const catalogFailed = catalogStatus === "error";
+  const modelsLoading =
+    allModels.length === 0 &&
+    (catalogStatus === "idle" || catalogStatus === "loading");
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q.length < 2) return [];
     return allModels
-      .filter((m) => {
-        const brand = allBrands.find((b) => b.id === m.brandId);
-        return m.name.toLowerCase().includes(q) || brand?.name.toLowerCase().includes(q);
-      })
+      .filter((m) =>
+        m.name.toLowerCase().includes(q) || m.brandName.toLowerCase().includes(q)
+      )
       .slice(0, 8);
-  }, [searchQuery, allModels, allBrands]);
+  }, [searchQuery, allModels]);
 
   const brandOptions = useMemo(
     () => allBrands.map((b) => ({ value: b.id, label: b.name })),
@@ -247,30 +259,52 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
 
   const modelOptions = useMemo(() => {
     if (!selectedBrandId) return [];
-    return getModels({ brandId: selectedBrandId }).map((m) => ({ value: m.id, label: m.name }));
-  }, [selectedBrandId]);
+    return allModels
+      .filter((m) => m.brandId === selectedBrandId)
+      .map((m) => ({ value: m.id, label: m.name }));
+  }, [selectedBrandId, allModels]);
 
-  const selectedModel: DeviceModel | undefined = useMemo(
+  const selectedModel: PickerModel | undefined = useMemo(
     () => allModels.find((m) => m.id === selectedModelId),
     [selectedModelId, allModels]
   );
 
-  const selectedBrand = allBrands.find((b) => b.id === selectedBrandId);
-  const count = selectedModel ? countForModel(selectedModel) : 0;
+  // Live count of ready-made options for the selected model
+  useEffect(() => {
+    if (!selectedModel) { setOptionsCount(null); return; }
+    let cancelled = false;
+    setOptionsCount(null);
+    variantsService
+      .getSkinsForModel(selectedModel.brandSlug, selectedModel.slug)
+      .then(({ variants }) => {
+        if (cancelled) return;
+        const products = new Set(variants.map((v) => v.product?.id).filter(Boolean));
+        setOptionsCount(products.size);
+      })
+      .catch(() => { if (!cancelled) setOptionsCount(0); });
+    return () => { cancelled = true; };
+  }, [selectedModel]);
 
-  function goToModel(m: DeviceModel) {
-    const brand = allBrands.find((b) => b.id === m.brandId);
-    if (brand) router.push(`/devices/${brand.slug}/${m.slug}`);
+  const selectedBrand = allBrands.find((b) => b.id === selectedBrandId);
+
+  function goToModel(m: PickerModel) {
+    router.push(`/devices/${m.brandSlug}/${m.slug}`);
   }
 
   function handleGo() {
-    if (selectedModel && selectedBrand) {
-      router.push(`/devices/${selectedBrand.slug}/${selectedModel.slug}`);
+    if (selectedModel) {
+      router.push(`/devices/${selectedModel.brandSlug}/${selectedModel.slug}`);
     }
   }
 
   const showSearch = searchQuery.trim().length >= 2;
   const canGo = Boolean(selectedModel);
+
+  const kindCount = useMemo(() => {
+    const map: Record<string, number> = {};
+    allModels.forEach((m) => { map[m.kind] = (map[m.kind] ?? 0) + 1; });
+    return map;
+  }, [allModels]);
 
   return (
     <div
@@ -288,7 +322,15 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
       >
         <p className="text-label-sm text-electric/80">Device finder</p>
         <h3 className="mt-1 text-headline-lg text-white">Find your device</h3>
-        <p className="mt-1 text-sm text-white/45">1,200+ models, precision-cut in India.</p>
+        <p className="mt-1 text-sm text-white/45">
+          {catalogFailed
+            ? "Couldn't load the device list — try again below."
+            : allModels.length > 0
+              ? `${allModels.length}+ models, precision-cut in India.`
+              : modelsLoading
+                ? "Loading devices…"
+                : "Precision-cut skins for your exact model."}
+        </p>
       </div>
 
       <div className={cn("px-6 py-6", !compact && "sm:px-8 sm:py-8")}>
@@ -305,16 +347,48 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
           />
         </div>
 
+        {/* ── Load failure — never dress this up as "no devices" ── */}
+        {catalogFailed && !showSearch && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <p className="text-xs text-muted-foreground">
+              We couldn&apos;t load the device list
+              {catalogError ? ` — ${catalogError}` : ""}.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 gap-1.5"
+              onClick={() => loadCatalog({ force: true })}
+            >
+              <RefreshCw className="size-3.5" /> Retry
+            </Button>
+          </div>
+        )}
+
         {/* ── Live search results ── */}
         {showSearch && (
           <ul className="mt-2 overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_8px_40px_rgba(0,0,0,0.10)] backdrop-blur-xl">
             {searchResults.length === 0 ? (
               <li className="px-4 py-3 text-sm text-muted-foreground">
-                No models found for &ldquo;{searchQuery}&rdquo;
+                {catalogFailed ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    Couldn&apos;t load the device list.
+                    <button
+                      type="button"
+                      onClick={() => loadCatalog({ force: true })}
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      Retry
+                    </button>
+                  </span>
+                ) : modelsLoading ? (
+                  "Loading models…"
+                ) : (
+                  <>No models found for &ldquo;{searchQuery}&rdquo;</>
+                )}
               </li>
             ) : (
               searchResults.map((m) => {
-                const brand = allBrands.find((b) => b.id === m.brandId);
                 return (
                   <li key={m.id} className="border-b border-white/50 last:border-0">
                     <button
@@ -325,7 +399,7 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
                       <span>
                         <span className="text-sm font-medium">{m.name}</span>
                         <span className="ml-2 text-xs text-muted-foreground capitalize">
-                          {brand?.name} · {m.type}
+                          {m.brandName} · {m.kind}
                         </span>
                       </span>
                       <ArrowRight className="size-3.5 shrink-0 text-primary opacity-60" />
@@ -395,7 +469,9 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
             <div>
               <p className="text-xs text-muted-foreground">Selected model</p>
               <p className="text-sm font-semibold tracking-tight">{selectedModel.name}</p>
-              <p className="mt-0.5 text-xs font-medium text-primary">{count} compatible skins</p>
+              <p className="mt-0.5 text-xs font-medium text-primary">
+                {optionsCount == null ? "Checking available skins…" : `${optionsCount} ready-made option${optionsCount === 1 ? "" : "s"}`}
+              </p>
             </div>
             <Button size="sm" onClick={handleGo} className="shrink-0 gap-1.5">
               Browse Skins <ArrowRight className="size-3.5" />
@@ -416,7 +492,7 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {DEVICE_TYPES.map(({ id, label, sublabel, icon: Icon, href }) => (
+            {DEVICE_TYPES.map(({ id, label, icon: Icon, href }) => (
               <a
                 key={id}
                 href={href}
@@ -439,7 +515,15 @@ export function DeviceFinder({ compact = false }: { compact?: boolean }) {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold tracking-tight">{label}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{sublabel}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {catalogFailed
+                      ? "Unavailable right now"
+                      : modelsLoading
+                        ? "Loading…"
+                        : (kindCount[id] ?? 0) > 0
+                          ? `${kindCount[id]} models`
+                          : "Models landing soon"}
+                  </span>
                 </span>
                 <ArrowRight className="ml-auto size-4 shrink-0 text-muted-foreground/40 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary" />
               </a>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchX } from "lucide-react";
@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shop/product-card";
 import { DeviceCard } from "@/components/device/device-card";
 import { EmptyState } from "@/components/shop/empty-state";
-import { search } from "@/lib/api";
+import { productsService } from "@/lib/services/products.service";
+import { useDeviceCatalog } from "@/lib/stores/device-catalog-store";
+import { categoriesService } from "@/lib/services/categories.service";
+import type { ApiCategory, ApiProduct } from "@/lib/api-types";
 
 function Results() {
   const params = useSearchParams();
@@ -17,10 +20,52 @@ function Results() {
   const q = params.get("q") ?? "";
   const [input, setInput] = useState(q);
 
-  const results = q ? search(q) : null;
-  const total = results
-    ? results.devices.length + results.brands.length + results.categories.length + results.skins.length
-    : 0;
+  const brands = useDeviceCatalog((s) => s.brands);
+  const models = useDeviceCatalog((s) => s.models);
+  const loadCatalog = useDeviceCatalog((s) => s.load);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [skins, setSkins] = useState<ApiProduct[] | null>(null);
+
+  useEffect(() => {
+    loadCatalog();
+    categoriesService
+      .getAll()
+      .then((items) => setCategories(items.filter((c) => c.isActive !== false)))
+      .catch(() => {
+        /* groups render empty below */
+      });
+  }, [loadCatalog]);
+
+  useEffect(() => {
+    const query = q.trim();
+    if (query.length < 2) { setSkins([]); return; }
+    let cancelled = false;
+    setSkins(null);
+    productsService
+      .search(query, { limit: 12 })
+      .then((res) => { if (!cancelled) setSkins(res.items); })
+      .catch(() => { if (!cancelled) setSkins([]); });
+    return () => { cancelled = true; };
+  }, [q]);
+
+  const query = q.trim().toLowerCase();
+  const matchedModels = useMemo(() => {
+    if (query.length < 2) return [];
+    return models
+      .filter((m) => m.name.toLowerCase().includes(query) || m.brandName.toLowerCase().includes(query))
+      .slice(0, 6);
+  }, [models, query]);
+  const matchedBrands = useMemo(
+    () => (query.length < 2 ? [] : brands.filter((b) => b.name.toLowerCase().includes(query))),
+    [brands, query]
+  );
+  const matchedCategories = useMemo(
+    () => (query.length < 2 ? [] : categories.filter((c) => c.name.toLowerCase().includes(query))),
+    [categories, query]
+  );
+
+  const total =
+    matchedModels.length + matchedBrands.length + matchedCategories.length + (skins?.length ?? 0);
 
   return (
     <>
@@ -42,11 +87,11 @@ function Results() {
         />
       </form>
 
-      {!results ? (
+      {!q ? (
         <p className="mt-10 text-muted-foreground">
-          Type something to search — try “iPhone 17” or “anime”.
+          Type something to search — try “iPhone 15” or “anime”.
         </p>
-      ) : total === 0 ? (
+      ) : total === 0 && skins !== null ? (
         <div className="mt-10">
           <EmptyState
             icon={SearchX}
@@ -58,38 +103,53 @@ function Results() {
         </div>
       ) : (
         <div className="mt-10 space-y-14">
-          <Group title="Devices" count={results.devices.length} hidden={results.devices.length === 0}>
+          <Group title="Devices" count={matchedModels.length} hidden={matchedModels.length === 0}>
             <ul className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3">
-              {results.devices.map((model) => (
-                <li key={model.id}>
-                  <DeviceCard model={model} />
-                </li>
-              ))}
+              {matchedModels.map((m) => {
+                const brand = brands.find((b) => b.id === m.brandId);
+                if (!brand) return null;
+                return (
+                  <li key={m.id}>
+                    <DeviceCard
+                      brand={brand}
+                      model={{
+                        id: m.id,
+                        brandId: m.brandId,
+                        name: m.name,
+                        slug: m.slug,
+                        imageUrl: m.imageUrl,
+                        isActive: true,
+                        createdAt: "",
+                      }}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           </Group>
 
-          <Group title="Skins" count={results.skins.length} hidden={results.skins.length === 0}>
+          <Group title="Skins" count={skins?.length ?? 0} hidden={!skins || skins.length === 0}>
             <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
-              {results.skins.map((skin) => (
-                <ProductCard key={skin.id} skin={skin} />
+              {(skins ?? []).map((p) => (
+                <ProductCard key={p.id} product={p} />
               ))}
             </div>
           </Group>
 
           <Group
             title="Brands & designs"
-            count={results.brands.length + results.categories.length}
-            hidden={results.brands.length + results.categories.length === 0}
+            count={matchedBrands.length + matchedCategories.length}
+            hidden={matchedBrands.length + matchedCategories.length === 0}
           >
             <ul className="flex flex-wrap gap-2.5">
-              {results.brands.map((b) => (
+              {matchedBrands.map((b) => (
                 <li key={b.id}>
                   <Button variant="outline" asChild>
                     <Link href={`/devices/${b.slug}`}>{b.name}</Link>
                   </Button>
                 </li>
               ))}
-              {results.categories.map((c) => (
+              {matchedCategories.map((c) => (
                 <li key={c.id}>
                   <Button variant="outline" asChild>
                     <Link href={`/designs/${c.slug}`}>{c.name}</Link>

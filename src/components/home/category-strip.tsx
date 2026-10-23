@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
-import { SkinArt } from "@/components/artwork/skin-art";
+import { ArrowRight, Layers } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { getCategories, getSkins } from "@/lib/api";
 import type { ApiCategory } from "@/lib/api-types";
 
 // ─── fetch from API ───────────────────────────────────────────────────────────
@@ -26,25 +24,9 @@ async function fetchApiCategories(): Promise<ApiCategory[]> {
 // ─── component ───────────────────────────────────────────────────────────────
 
 export async function CategoryStrip() {
-  // Fetch API categories; fall back to static ones if the API is unavailable
-  const apiCategories = await fetchApiCategories();
+  const categories = (await fetchApiCategories()).slice(0, 10);
 
-  // Static categories are used for SkinArt fallback colours/patterns and count
-  const staticCategories = getCategories();
-
-  // Merge: use API data for name/slug/imageUrl, static data for pattern/colors
-  const categories = (
-    apiCategories.length > 0 ? apiCategories : staticCategories.map((c) => ({
-      id:       c.id,
-      name:     c.name,
-      slug:     c.slug,
-      imageUrl: undefined,
-      image:    undefined,
-      isActive: true,
-      createdAt: "",
-      description: c.blurb,
-    } satisfies ApiCategory))
-  ).slice(0, 10);
+  if (categories.length === 0) return null;
 
   return (
     <section className="container-x section-pad" aria-labelledby="designs-heading">
@@ -71,13 +53,7 @@ export async function CategoryStrip() {
       <ScrollReveal threshold={0.05}>
         <ul className="mt-8 grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {categories.map((cat, i) => {
-            // Local skin count (from static data, matched by slug)
-            const staticCat = staticCategories.find((s) => s.slug === cat.slug);
-            const count = staticCat
-              ? getSkins({ categoryIds: [staticCat.id] }).length
-              : 0;
-
-            // Image: prefer API imageUrl, then image, then generated SkinArt
+            const count = cat._count?.products ?? 0;
             const imgSrc = cat.imageUrl ?? cat.image;
 
             return (
@@ -101,14 +77,10 @@ export async function CategoryStrip() {
                           height={300}
                           className="h-full w-full object-cover"
                         />
-                      ) : staticCat ? (
-                        <SkinArt
-                          pattern={staticCat.pattern}
-                          colors={staticCat.colors}
-                        />
                       ) : (
-                        // ultimate fallback: solid muted bg
-                        <div className="h-full w-full bg-muted" />
+                        <div className="grid h-full w-full place-items-center bg-muted text-muted-foreground/40">
+                          <Layers className="size-10" aria-hidden="true" />
+                        </div>
                       )}
                     </div>
                   </div>

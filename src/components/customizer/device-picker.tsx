@@ -1,32 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getBrands, getModels } from "@/lib/api";
-import type { DeviceModel, DeviceType } from "@/lib/types";
+import { type DeviceKind, type PickerModel } from "@/lib/live-devices";
+import { useDeviceCatalog } from "@/lib/stores/device-catalog-store";
 import { cn } from "@/lib/utils";
+
+const TABS = [
+  ["phone", "Phone"],
+  ["laptop", "Laptop"],
+] as const;
 
 export function DevicePicker({
   value,
   onConfirm,
 }: {
-  value?: DeviceModel;
-  onConfirm: (model: DeviceModel) => void;
+  value?: PickerModel;
+  onConfirm: (model: PickerModel) => void;
 }) {
-  const [type, setType] = useState<DeviceType>(value?.type ?? "phone");
+  const [kind, setKind] = useState<DeviceKind>(value?.kind ?? "phone");
   const [brandId, setBrandId] = useState<string | null>(value?.brandId ?? null);
   const [query, setQuery] = useState("");
 
-  const brands = useMemo(() => getBrands(type), [type]);
-  const models = useMemo(
-    () =>
-      getModels({ type, brandId: brandId ?? undefined }).filter((m) =>
-        m.name.toLowerCase().includes(query.trim().toLowerCase())
-      ),
-    [type, brandId, query]
+  const brands = useDeviceCatalog((s) => s.brands);
+  const models = useDeviceCatalog((s) => s.models);
+  const loadCatalog = useDeviceCatalog((s) => s.load);
+
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog]);
+
+  const visibleBrands = useMemo(
+    () => brands.filter((b) => models.some((m) => m.brandId === b.id && m.kind === kind)),
+    [brands, models, kind]
   );
+
+  const visibleModels = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return models.filter(
+      (m) =>
+        m.kind === kind &&
+        (brandId == null || m.brandId === brandId) &&
+        (!q || m.name.toLowerCase().includes(q))
+    );
+  }, [models, kind, brandId, query]);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -39,22 +58,17 @@ export function DevicePicker({
       </div>
 
       <div className="mt-8 flex justify-center gap-2" role="tablist" aria-label="Device family">
-        {(
-          [
-            ["phone", "Phone"],
-            ["laptop", "Laptop"],
-          ] as const
-        ).map(([t, label]) => (
+        {TABS.map(([t, label]) => (
           <button
             key={t}
             role="tab"
-            aria-selected={type === t}
+            aria-selected={kind === t}
             onClick={() => {
-              setType(t);
+              setKind(t);
               setBrandId(null);
             }}
             className={`press rounded-lg px-5 py-2.5 text-sm font-semibold ${
-              type === t
+              kind === t
                 ? "bg-foreground text-background"
                 : "border hover:bg-muted"
             }`}
@@ -65,7 +79,7 @@ export function DevicePicker({
       </div>
 
       <ul className="mt-6 flex flex-wrap justify-center gap-2">
-        {brands.map((b) => (
+        {visibleBrands.map((b) => (
           <li key={b.id}>
             <button
               type="button"
@@ -95,17 +109,17 @@ export function DevicePicker({
         />
       </div>
 
-      {models.length === 0 && brandId == null ? (
+      {visibleModels.length === 0 && brandId == null ? (
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Pick a brand above to see models.
         </p>
-      ) : models.length === 0 ? (
+      ) : visibleModels.length === 0 ? (
         <p className="mt-6 text-center text-sm text-muted-foreground">
           No models match “{query}”.
         </p>
       ) : (
         <ul className="mt-6 grid max-h-[46vh] gap-2.5 overflow-y-auto pr-1 sm:grid-cols-2">
-          {models.map((m) => (
+          {visibleModels.map((m) => (
             <li key={m.id}>
               <button
                 type="button"
@@ -114,7 +128,7 @@ export function DevicePicker({
               >
                 <span>
                   <span className="block text-xs uppercase tracking-wide text-muted-foreground">
-                    {getBrands(type).find((b) => b.id === m.brandId)?.name}
+                    {m.brandName}
                   </span>
                   <span className="block font-medium">{m.name}</span>
                 </span>

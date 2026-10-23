@@ -2,31 +2,71 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeviceCard } from "@/components/device/device-card";
-import {
-  countForModel,
-  getBrands,
-  getModels,
-  resolveDeviceSegment,
-} from "@/lib/api";
+import { devicesService } from "@/lib/services/devices.service";
+import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  const segments = ["phones", "tablets", "laptops"];
-  for (const b of getBrands()) segments.push(b.slug);
-  return segments.map((slug) => ({ slug }));
+// Legacy category slugs + raw device-type slugs
+const CATEGORY_TO_TYPE: Record<string, string> = {
+  phones: "smartphone",
+  tablets: "tablet",
+  laptops: "laptop",
+};
+
+async function resolveSegment(slug: string): Promise<
+  | { kind: "category"; typeSlug: string; typeName: string; models: ApiDeviceModel[] }
+  | { kind: "brand"; brand: ApiBrand; models: ApiDeviceModel[] }
+  | null
+> {
+  if (CATEGORY_TO_TYPE[slug]) {
+    const typeSlug = CATEGORY_TO_TYPE[slug];
+    const [types, models] = await Promise.all([
+      devicesService.getDeviceTypes().catch(() => []),
+      devicesService.getModelsByType(typeSlug).catch(() => []),
+    ]);
+    const typeName = types.find((t) => t.slug === typeSlug)?.name ?? typeSlug;
+    return { kind: "category", typeSlug, typeName, models };
+  }
+  // Raw device-type slug (e.g. /devices/earbuds)
+  const types = await devicesService.getDeviceTypes().catch(() => []);
+  if (types.some((t) => t.slug === slug)) {
+    const typeName = types.find((t) => t.slug === slug)?.name ?? slug;
+    const models = await devicesService.getModelsByType(slug).catch(() => []);
+    return { kind: "category", typeSlug: slug, typeName, models };
+  }
+  // Brand slug
+  try {
+    const brand = await devicesService.getBrandBySlug(slug);
+    const models = await devicesService.getModelsForBrand(slug).catch(() => []);
+    return { kind: "brand", brand, models };
+  } catch {
+    return null;
+  }
 }
+
+/**
+ * Rendered on demand rather than prerendered — same reason as
+ * `devices/[slug]/[model]/page.tsx`. Prerendering every brand and type page
+ * costs ~130 API calls per build against a shared 200 req / 15 min backend
+ * quota, so a rebuild or two in the same window exhausted it and later pages
+ * were generated from rate-limited responses.
+ */
+export async function generateStaticParams() {
+  return [];
+}
+
+/** On-demand renders are cached for ten minutes. */
+export const revalidate = 600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const resolved = resolveDeviceSegment(slug);
+  const resolved = await resolveSegment(slug);
   if (!resolved) return {};
   if (resolved.kind === "category") {
-    const t = resolved.type;
-    const label = t === "phone" ? "Phone" : t === "tablet" ? "Tablet" : "Laptop";
     return {
-      title: `${label} Skins — Skins by Model`,
-      description: `Browse precision-cut ${t} skins by brand and model. Find your exact device.`,
+      title: `${resolved.typeName} Skins — Skins by Model`,
+      description: `Browse precision-cut ${resolved.typeName.toLowerCase()} skins by brand and model. Find your exact device.`,
       alternates: { canonical: `/devices/${slug}` },
     };
   }
@@ -39,23 +79,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DeviceSegmentPage({ params }: Props) {
   const { slug } = await params;
-  const resolved = resolveDeviceSegment(slug);
+  const resolved = await resolveSegment(slug);
   if (!resolved) notFound();
 
   if (resolved.kind === "category") {
-    const type = resolved.type;
-    const models = getModels({ type });
+    const { typeName, models } = resolved;
+    const brands = await devicesService.getBrands().catch(() => []);
+    const brandById = new Map(brands.map((b) => [b.id, b]));
+    const seenBrandIds = [...new Set(models.map((m) => m.brandId))];
     return (
       <div className="container-x py-10 lg:py-14">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
           <ol className="flex gap-1.5">
             <li><Link href="/devices" className="hover:text-foreground">Devices</Link></li>
             <li aria-hidden="true">/</li>
-            <li aria-current="page" className="font-medium capitalize text-foreground">{type}s</li>
+            <li aria-current="page" className="font-medium capitalize text-foreground">{typeName}s</li>
           </ol>
         </nav>
         <header className="mt-4">
-          <h1 className="text-headline-lg">{type === "phone" ? "Phone" : type === "tablet" ? "Tablet" : "Laptop"} Skins &amp; Wraps</h1>
+          <h1 className="text-headline-lg">{typeName} Skins &amp; Wraps</h1>
           <p className="mt-2 text-muted-foreground">
             {models.length} models · pick yours to see only compatible skins.
           </p>
@@ -63,33 +105,45 @@ export default async function DeviceSegmentPage({ params }: Props) {
 
         {/* brand shortcuts */}
         <ul className="mt-8 flex flex-wrap gap-2">
-          {getBrands(type).map((b) => (
-            <li key={b.id}>
-              <Link
-                href={`/devices/${b.slug}`}
-                className="press inline-flex rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:border-transparent hover:shadow-card-hover"
-              >
-                {b.name}
-              </Link>
-            </li>
-          ))}
+          {seenBrandIds.map((id) => {
+            const b = brandById.get(id);
+            if (!b) return null;
+            return (
+              <li key={b.id}>
+                <Link
+                  href={`/devices/${b.slug}`}
+                  className="press inline-flex rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:border-transparent hover:shadow-card-hover"
+                >
+                  {b.name}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-          {models.map((model) => (
-            <li key={model.id}>
-              <DeviceCard model={model} />
-            </li>
-          ))}
+          {models.map((model) => {
+            const brand = model.brand ?? brandById.get(model.brandId);
+            if (!brand) return null;
+            return (
+              <li key={model.id}>
+                <DeviceCard brand={brand} model={model} />
+              </li>
+            );
+          })}
         </ul>
       </div>
     );
   }
 
-  const brand = resolved.brand;
-  const models = getModels({ brandId: brand.id });
-  const phones = models.filter((m) => m.type === "phone");
-  const laptops = models.filter((m) => m.type === "laptop");
+  const { brand, models } = resolved;
+  const byType = new Map<string, ApiDeviceModel[]>();
+  models.forEach((m) => {
+    const key = m.deviceType?.name ?? "Other";
+    const list = byType.get(key) ?? [];
+    list.push(m);
+    byType.set(key, list);
+  });
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -105,33 +159,21 @@ export default async function DeviceSegmentPage({ params }: Props) {
         <div>
           <h1 className="text-headline-lg">{brand.name} Skins &amp; Wraps</h1>
           <p className="mt-2 text-muted-foreground">
-            {models.length} {models.length === 1 ? "model" : "models"} ·{" "}
-            {models.reduce((n, m) => n + countForModel(m), 0)} skins available
+            {models.length} {models.length === 1 ? "model" : "models"}
           </p>
         </div>
       </header>
 
-      {phones.length > 0 && (
-        <section aria-labelledby="brand-phones-heading" className="mt-10">
-          <h2 id="brand-phones-heading" className="text-xl font-semibold tracking-tight">Phones</h2>
+      {[...byType.entries()].map(([typeName, list]) => (
+        <section key={typeName} aria-label={typeName} className="mt-10">
+          <h2 className="text-xl font-semibold tracking-tight">{typeName}s</h2>
           <ul className="mt-5 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {phones.map((model) => (
-              <li key={model.id}><DeviceCard model={model} /></li>
+            {list.map((model) => (
+              <li key={model.id}><DeviceCard brand={brand} model={model} /></li>
             ))}
           </ul>
         </section>
-      )}
-
-      {laptops.length > 0 && (
-        <section aria-labelledby="brand-laptops-heading" className="mt-12">
-          <h2 id="brand-laptops-heading" className="text-xl font-semibold tracking-tight">Laptops</h2>
-          <ul className="mt-5 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {laptops.map((model) => (
-              <li key={model.id}><DeviceCard model={model} /></li>
-            ))}
-          </ul>
-        </section>
-      )}
+      ))}
     </div>
   );
 }

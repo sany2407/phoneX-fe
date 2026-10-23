@@ -22,11 +22,11 @@ export type OrbitSlide = { src: string; alt: string };
 
 const SLOTS = [
   // front
-  { tx: 0,    ty: 0,  scale: 1.00, opacity: 1.00, shadow: "0 40px 80px rgba(0,0,0,0.60)" },
+  { tx: 0,    ty: 0,   scale: 1.00, opacity: 1.00, shadow: "0 40px 80px rgba(0,0,0,0.60)" },
   // right
-  { tx: 150,  ty: 28, scale: 0.58, opacity: 0.60, shadow: "0 16px 32px rgba(0,0,0,0.30)" },
+  { tx: 228,  ty: 108, scale: 0.62, opacity: 1.00, shadow: "0 22px 44px rgba(0,0,0,0.45)" },
   // left
-  { tx: -150, ty: 28, scale: 0.58, opacity: 0.60, shadow: "0 16px 32px rgba(0,0,0,0.30)" },
+  { tx: -228, ty: 108, scale: 0.62, opacity: 1.00, shadow: "0 22px 44px rgba(0,0,0,0.45)" },
 ] as const;
 
 // Transition — long enough to feel luxurious, spring-like cubic-bezier.
@@ -41,7 +41,7 @@ const TRANSITION = `transform ${DUR_MS}ms ${EASE}, opacity ${DUR_MS}ms ${EASE}, 
 const Z_DELAY_MS = DUR_MS / 2;
 
 const INTERVAL_MS  = 3800; // pause between rotations
-const BASE_W       = 220;  // px — fixed for all phones
+const BASE_W       = 288;  // px — fixed for all phones
 const PHONE_ASPECT = 674 / 370;
 const BASE_H       = Math.round(BASE_W * PHONE_ASPECT);
 
@@ -61,30 +61,44 @@ export function PhoneOrbit({
   const [zPositions, setZPositions] = useState<[number, number, number]>([0, 1, 2]);
 
   const reducedRef = useRef(false);
-  const mobileRef  = useRef(false);
 
-  // listen for media-query changes
+  // Responsive scale: shrink the whole orbit to fit narrow containers.
+  // Initialized from the viewport so the first paint is already correct.
+  const [orbitScale, setOrbitScale] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches ? 0.65 : 1
+  );
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // listen for reduced-motion changes
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mobile  = window.matchMedia("(max-width: 639px)");
 
     const sync = () => {
       reducedRef.current = reduced.matches;
-      mobileRef.current  = mobile.matches;
     };
     sync();
     reduced.addEventListener("change", sync);
-    mobile.addEventListener("change",  sync);
     return () => {
       reduced.removeEventListener("change", sync);
-      mobile.removeEventListener("change",  sync);
     };
   }, []);
 
-  // rotation interval
+  // track container width → orbit scale (min 0.55 so phones stay legible)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0;
+      if (w > 0) setOrbitScale(Math.min(1, Math.max(0.5, w / 720)));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // rotation interval — runs on mobile too (same animation everywhere)
   useEffect(() => {
     const id = setInterval(() => {
-      if (document.hidden || reducedRef.current || mobileRef.current) return;
+      if (document.hidden || reducedRef.current) return;
 
       // advance every phone one slot clockwise
       setPositions((prev) => [
@@ -106,14 +120,22 @@ export function PhoneOrbit({
     return () => clearInterval(id);
   }, []);
 
+  // Geometry scales with the container so the orbit fits any viewport.
+  // translate/scale stay in one transform → still pure compositor work.
+  const w  = Math.round(BASE_W * orbitScale);
+  const h  = Math.round(BASE_H * orbitScale);
+  const tx = (v: number) => Math.round(v * orbitScale);
+  const ty = (v: number) => Math.round(v * orbitScale);
+
   return (
     <div
       aria-hidden="true"
+      ref={containerRef}
       style={{
         position: "relative",
         width: "100%",
         // container height accommodates the front phone + a little breathing room
-        height: `${BASE_H + 40}px`,
+        height: `${h + Math.round(40 * orbitScale)}px`,
       }}
     >
       {slides.map((slide, phoneIdx) => {
@@ -126,18 +148,18 @@ export function PhoneOrbit({
             key={slide.src}
             style={{
               // All phones share the same fixed dimensions.
-              // Position, scale, and depth are ALL driven through transform — 
+              // Position, scale, and depth are ALL driven through transform —
               // the compositor can animate this without touching layout or paint.
               position:  "absolute",
-              width:     `${BASE_W}px`,
-              height:    `${BASE_H}px`,
+              width:     `${w}px`,
+              height:    `${h}px`,
               // Anchor to container centre
-              left:      `calc(50% - ${BASE_W / 2}px)`,
-              top:       `calc(50% - ${BASE_H / 2}px)`,
+              left:      `calc(50% - ${w / 2}px)`,
+              top:       `calc(50% - ${h / 2}px)`,
               // Single transform property: translate → scale
               // Translating before scaling means tx/ty are in "pre-scale" space,
               // which gives predictable pixel offsets regardless of scale value.
-              transform: `translate(${slot.tx}px, ${slot.ty}px) scale(${slot.scale})`,
+              transform: `translate(${tx(slot.tx)}px, ${ty(slot.ty)}px) scale(${slot.scale})`,
               opacity:   slot.opacity,
               // filter (drop-shadow) is animated too — it fades between the two
               // values rather than snapping, which removes the shadow-class jank.
@@ -152,8 +174,8 @@ export function PhoneOrbit({
             <Image
               src={slide.src}
               alt={slotIdx === 0 ? slide.alt : ""}
-              width={BASE_W}
-              height={BASE_H}
+              width={w}
+              height={h}
               loading="eager"
               priority={phoneIdx === 0}
               style={{ width: "100%", height: "100%", objectFit: "contain" }}

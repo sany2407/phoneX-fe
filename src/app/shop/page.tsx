@@ -7,14 +7,31 @@ import { SortSelect, TypeTabs } from "@/components/shop/catalog-controls";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { EmptyState } from "@/components/shop/empty-state";
 import { parseCatalogQuery, PAGE_SIZE } from "@/lib/catalog-query";
-import { getSkins } from "@/lib/api";
+import { productsService } from "@/lib/services/products.service";
+import { categoriesService } from "@/lib/services/categories.service";
+import type { ApiCategory } from "@/lib/api-types";
 
 export const metadata: Metadata = {
   title: "Shop All Skins — Phone & Laptop Skins",
   description:
-    "Browse hundreds of precision-cut phone and laptop skins. Filter by design category, material, finish, price and rating.",
+    "Browse precision-cut phone and laptop skins. Filter by design category, material, finish, price and rating.",
   alternates: { canonical: "/shop" },
 };
+
+const DEVICE_TYPE_SLUG: Record<string, string> = {
+  phone: "smartphone",
+  laptop: "laptop",
+  tablet: "tablet",
+};
+
+async function fetchCategories(): Promise<ApiCategory[]> {
+  try {
+    const items = await categoriesService.getAll({ revalidate: 300 });
+    return Array.isArray(items) ? items.filter((c) => c.isActive) : [];
+  } catch {
+    return [];
+  }
+}
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -23,19 +40,44 @@ type Props = {
 export default async function ShopPage({ searchParams }: Props) {
   const sp = await searchParams;
   const query = parseCatalogQuery(sp);
-  const all = getSkins({
-    deviceType: query.type,
-    categoryIds: query.categories,
-    materials: query.materials,
-    finishes: query.finishes,
-    maxPrice: query.maxPrice,
-    minRating: query.rating,
-    inStockOnly: query.stock,
-    sort: query.sort,
-  });
-  const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
-  const page = Math.min(query.page, pages);
-  const skins = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const [categories, facets] = await Promise.all([
+    fetchCategories(),
+    productsService.getFacets({ revalidate: 300 }).catch(() => ({ materials: [], finishes: [] })),
+  ]);
+
+  // URL carries category slugs — the API needs IDs
+  const categoryIds = query.categories
+    .map((slug) => categories.find((c) => c.slug === slug)?.id)
+    .filter((id): id is string => Boolean(id));
+
+  // If the user picked categories that don't exist, the result is honestly empty
+  const unknownCategory = query.categories.length > 0 && categoryIds.length === 0;
+
+  const { items: products, pagination } = unknownCategory
+    ? { items: [], pagination: { items: [], total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 } }
+    : await productsService
+        .list(
+          {
+            page: query.page,
+            limit: PAGE_SIZE,
+            categoryId: categoryIds.join(",") || undefined,
+            material: query.materials.join(",") || undefined,
+            finish: query.finishes.join(",") || undefined,
+            maxPrice: query.maxPrice,
+            minRating: query.rating,
+            inStock: query.stock || undefined,
+            deviceType: query.type ? DEVICE_TYPE_SLUG[query.type] : undefined,
+            sort: query.sort,
+          },
+          { revalidate: 60 }
+        )
+        .catch(() => ({
+          items: [],
+          pagination: { items: [], total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 },
+        }));
+
+  const visible = products;
 
   const qs = (patch: Record<string, string>) => {
     const params = new URLSearchParams();
@@ -60,7 +102,7 @@ export default async function ShopPage({ searchParams }: Props) {
         <div>
           <h1 className="text-headline-lg">All Skins</h1>
           <p className="mt-1 text-muted-foreground" aria-live="polite">
-            {all.length} {all.length === 1 ? "design" : "designs"}
+            {pagination.total} {pagination.total === 1 ? "design" : "designs"}
             {query.type ? ` · ${query.type}s` : ""}
             {query.q ? ` · “${query.q}”` : ""}
           </p>
@@ -76,27 +118,35 @@ export default async function ShopPage({ searchParams }: Props) {
       <div className="mt-8 grid gap-10 lg:grid-cols-[240px_1fr]">
         <aside className="lg:sticky lg:top-32 lg:self-start">
           <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-muted" />}>
-            <FilterSidebar deviceType={query.type} />
+            <FilterSidebar
+              categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+              materials={facets.materials}
+              finishes={facets.finishes}
+            />
           </Suspense>
         </aside>
 
         <section aria-label="Products">
-          {skins.length === 0 ? (
+          {visible.length === 0 ? (
             <EmptyState
               icon={PackageSearch}
-              title="No skins match these filters"
-              description="Try removing a filter or two — or design exactly what you want in the studio."
+              title={pagination.total === 0 ? "No skins yet" : "No skins match these filters"}
+              description={
+                pagination.total === 0
+                  ? "New designs are on the way — check back soon or design your own in the studio."
+                  : "Try removing a filter or two — or design exactly what you want in the studio."
+              }
               actionLabel="Open Custom Studio"
               actionHref="/customize"
             />
           ) : (
             <>
-              <ProductGrid skins={skins} deviceType={query.type} />
-              {pages > 1 && (
+              <ProductGrid products={visible} />
+              {pagination.totalPages > 1 && (
                 <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2">
-                  {page > 1 && (
+                  {pagination.page > 1 && (
                     <Link
-                      href={qs({ page: String(page - 1) })}
+                      href={qs({ page: String(pagination.page - 1) })}
                       rel="prev"
                       className="press rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
                     >
@@ -104,11 +154,11 @@ export default async function ShopPage({ searchParams }: Props) {
                     </Link>
                   )}
                   <span className="px-2 text-sm text-muted-foreground">
-                    Page {page} of {pages}
+                    Page {pagination.page} of {pagination.totalPages}
                   </span>
-                  {page < pages && (
+                  {pagination.page < pagination.totalPages && (
                     <Link
-                      href={qs({ page: String(page + 1) })}
+                      href={qs({ page: String(pagination.page + 1) })}
                       rel="next"
                       className="press rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
                     >

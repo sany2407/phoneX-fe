@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { CouponCard } from "@/components/home/coupon-card";
-import { offerSkins } from "@/lib/api";
+import { productsService } from "@/lib/services/products.service";
 import { fetchPublicCoupons } from "@/lib/services/coupons-public";
 
 export const metadata: Metadata = {
@@ -15,8 +15,13 @@ export const metadata: Metadata = {
 };
 
 export default async function OffersPage() {
-  const offers  = offerSkins(12);
-  const coupons = await fetchPublicCoupons();
+  const [sale, coupons] = await Promise.all([
+    productsService
+      .list({ onSale: true, limit: 12, sort: "popular" }, { revalidate: 60 })
+      .then((r) => r.items)
+      .catch(() => []),
+    fetchPublicCoupons(),
+  ]);
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -50,7 +55,13 @@ export default async function OffersPage() {
           </Button>
         </div>
         <div className="mt-8">
-          <ProductGrid skins={offers} columns={4} />
+          {sale.length > 0 ? (
+            <ProductGrid products={sale} columns={4} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No sale items right now — new drops land every week.
+            </p>
+          )}
         </div>
       </section>
     </div>

@@ -73,7 +73,7 @@ export function OrderDetailClient() {
           <div>
             <h2 className="font-heading text-lg font-semibold">Order confirmed</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Thanks, {order.customer.fullName.split(" ")[0]}! Your order{" "}
+              Thanks, {order.customer.name.split(" ")[0]}! Your order{" "}
               <strong className="text-foreground">{orderNumber(order.id)}</strong> is in our
               print queue. We&apos;ll email updates at {order.customer.email}.
             </p>
@@ -214,10 +214,10 @@ export function OrderDetailClient() {
           <div className="rounded-xl border bg-card p-6">
             <h2 className="font-heading font-semibold">Delivery address</h2>
             <address className="mt-3 not-italic text-sm leading-6 text-muted-foreground">
-              <strong className="block text-foreground">{order.customer.fullName}</strong>
+              <strong className="block text-foreground">{order.customer.name}</strong>
               {order.customer.line1}
               <br />
-              {order.customer.city}, {order.customer.state} {order.customer.pincode}
+              {order.customer.city}, {order.customer.state} {order.customer.postalCode}
               <br />
               {order.customer.phone}
             </address>

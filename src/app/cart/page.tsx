@@ -1,40 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bookmark, Heart, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowRight, Bookmark, Heart, Minus, Plus, ShoppingBag, Trash2, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState } from "@/components/shop/empty-state";
-import { DeviceFrame } from "@/components/artwork/device-frame";
 import { cartTotals, useCart } from "@/lib/stores/cart-store";
-import { getModelById, getSkinById, brandOf } from "@/lib/api";
 import { formatINR } from "@/lib/utils";
 import type { CartItem } from "@/lib/types";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 
 function Thumb({ item }: { item: CartItem }) {
-  const skin = item.kind === "skin" && item.refId ? getSkinById(item.refId) : undefined;
-  if (skin) {
-    const model = getModelById(item.deviceId);
+  if (item.thumb) {
     return (
-      <div className="grid h-20 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border bg-secondary">
-        <DeviceFrame
-          type={model?.type ?? "phone"}
-          colors={skin.colors}
-          pattern={skin.pattern}
-          brand={model ? brandOf(model).id : undefined}
-          className="h-[88%]"
-        />
-      </div>
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={item.thumb}
+        alt={`Artwork for ${item.title}`}
+        className="h-20 w-16 shrink-0 rounded-lg border object-cover"
+      />
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={item.thumb}
-      alt={`Artwork for ${item.title}`}
-      className="h-20 w-16 shrink-0 rounded-lg border object-cover"
-    />
+    <div className="grid h-20 w-16 shrink-0 place-items-center rounded-lg border bg-secondary text-muted-foreground/50">
+      <ImageOff className="size-6" aria-hidden="true" />
+    </div>
   );
 }
 

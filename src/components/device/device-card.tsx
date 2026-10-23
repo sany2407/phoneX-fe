@@ -1,23 +1,19 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { fromPriceForModel, getDeviceHero, getSkinsForModel, brandOf } from "@/lib/api";
-import type { DeviceModel } from "@/lib/types";
-import { DeviceFrame } from "@/components/artwork/device-frame";
+import { ImageOff } from "lucide-react";
+import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
 import { DevicePhoto } from "@/components/device/device-photo";
-import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 export function DeviceCard({
+  brand,
   model,
   className,
 }: {
-  model: DeviceModel;
+  brand: ApiBrand;
+  model: ApiDeviceModel;
   className?: string;
 }) {
-  const topSkin   = getSkinsForModel(model, { sort: "featured", limit: 1 })[0];
-  const brand     = brandOf(model);
-  const fromPrice = fromPriceForModel(model);
-  const hero      = getDeviceHero(brand.slug, model.slug);
+  const typeName = model.deviceType?.name;
 
   return (
     <Link
@@ -28,14 +24,9 @@ export function DeviceCard({
       {/* ── Image panel ── */}
       <div
         className={cn(
-          "relative grid place-items-center overflow-hidden rounded-2xl",
+          "relative grid aspect-square place-items-center overflow-hidden rounded-2xl",
           "glass shadow-glass transition-all duration-300 ease-out",
-          "group-hover:shadow-glass-hover group-hover:-translate-y-1",
-          hero
-            ? "aspect-square"
-            : model.type === "phone"
-              ? "aspect-square p-8"
-              : "aspect-4/3 p-6"
+          "group-hover:shadow-glass-hover group-hover:-translate-y-1"
         )}
       >
         {/* subtle top-edge highlight */}
@@ -44,25 +35,21 @@ export function DeviceCard({
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"
         />
 
-        {hero ? (
+        {model.imageUrl ? (
           <DevicePhoto
-            src={hero.src}
+            src={model.imageUrl}
             alt={`${brand.name} ${model.name}`}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="p-5 transition-transform duration-500 ease-out group-hover:scale-[1.04]"
           />
-        ) : topSkin ? (
-          <DeviceFrame
-            type={model.type}
-            colors={topSkin.colors}
-            pattern={topSkin.pattern}
-            brand={brand.id}
-            className={cn(
-              "transition-transform duration-500 ease-out group-hover:scale-[1.04]",
-              model.type === "phone" ? "h-[88%]" : "w-full"
-            )}
-          />
-        ) : null}
+        ) : (
+          <div className="flex flex-col items-center gap-2 p-6 text-center text-muted-foreground/50">
+            <ImageOff className="size-8" aria-hidden="true" />
+            <span className="text-xs font-medium">
+              {brand.name} {model.name}
+            </span>
+          </div>
+        )}
 
         {/* hover CTA chip */}
         <span
@@ -75,7 +62,7 @@ export function DeviceCard({
             "group-hover:translate-y-0 group-hover:opacity-100"
           )}
         >
-          Browse Skins <ArrowRight className="size-3" />
+          Browse Skins
         </span>
       </div>
 
@@ -85,14 +72,9 @@ export function DeviceCard({
         <h3 className="mt-0.5 text-[15px] font-semibold leading-tight tracking-[-0.01em] text-foreground group-hover:text-primary transition-colors duration-150">
           {model.name}
         </h3>
-        {fromPrice > 0 ? (
-          <p className="mt-1 text-xs font-medium text-muted-foreground">
-            From{" "}
-            <span className="font-semibold text-foreground">{formatINR(fromPrice)}</span>
-          </p>
-        ) : (
-          <p className="mt-1 text-xs text-muted-foreground">Coming soon</p>
-        )}
+        {typeName ? (
+          <p className="mt-1 text-xs text-muted-foreground">{typeName}</p>
+        ) : null}
       </div>
     </Link>
   );

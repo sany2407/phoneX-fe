@@ -1,14 +1,12 @@
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/shop/product-card";
-import type { DeviceType, Skin } from "@/lib/types";
+import type { ApiProduct } from "@/lib/api-types";
 
 export function ProductGrid({
-  skins,
-  deviceType,
+  products,
   columns = 4,
 }: {
-  skins: Skin[];
-  deviceType?: DeviceType;
+  products: ApiProduct[];
   columns?: 3 | 4 | 5;
 }) {
   return (
@@ -20,8 +18,8 @@ export function ProductGrid({
         columns === 5 && "md:grid-cols-3 lg:grid-cols-5"
       )}
     >
-      {skins.map((skin) => (
-        <ProductCard key={skin.id} skin={skin} deviceType={deviceType} />
+      {products.map((p) => (
+        <ProductCard key={p.id} product={p} />
       ))}
     </div>
   );

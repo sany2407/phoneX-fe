@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 import Link from "next/link";
 import { Pencil, ShoppingBag, Trash2 } from "lucide-react";
@@ -9,7 +10,8 @@ import { EmptyState } from "@/components/shop/empty-state";
 import { useDesigns } from "@/lib/stores/designs-store";
 import { useCart } from "@/lib/stores/cart-store";
 import { useAuth } from "@/lib/stores/auth-store";
-import { getModelById, materialLabel } from "@/lib/api";
+import { materialLabel } from "@/lib/taxonomy";
+import { useDeviceCatalog } from "@/lib/stores/device-catalog-store";
 import { customPrice } from "@/lib/custom-pricing";
 import { formatDate, formatINR } from "@/lib/utils";
 
@@ -18,6 +20,14 @@ export default function SavedDesignsPage() {
   const designs = useDesigns((s) => s.designs);
   const remove = useDesigns((s) => s.remove);
   const user = useAuth((s) => s.user);
+  const models = useDeviceCatalog((s) => s.models);
+  const loadCatalog = useDeviceCatalog((s) => s.load);
+
+  // Saved designs only store a device id — resolve names/prices against live data
+  useEffect(() => {
+    if (!hydrated || designs.length === 0) return;
+    loadCatalog();
+  }, [hydrated, designs.length, loadCatalog]);
 
   if (!hydrated) {
     return (
@@ -54,7 +64,7 @@ export default function SavedDesignsPage() {
       ) : (
         <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {designs.map((d) => {
-            const model = getModelById(d.deviceId);
+            const model = models.find((m) => m.id === d.deviceId);
             return (
               <li key={d.id} className="overflow-hidden rounded-xl border bg-card transition-shadow duration-300 ease-out hover:shadow-card-hover">
                 <Link href={`/customize?design=${d.id}`} className="block bg-secondary/60 p-5">
@@ -89,7 +99,7 @@ export default function SavedDesignsPage() {
                           subtitle: `${materialLabel(d.skinType)} · ${d.deviceName}`,
                           deviceId: d.deviceId,
                           deviceName: d.deviceName,
-                          unitPrice: customPrice(model, d.skinType),
+                          unitPrice: model ? customPrice(model.kind, d.skinType) : 0,
                           thumb: d.imageSrc,
                           designId: d.id,
                         });
@@ -117,7 +127,7 @@ export default function SavedDesignsPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {model ? `From ${formatINR(customPrice(model, d.skinType))}` : "Device unavailable"}
+                    {model ? `From ${formatINR(customPrice(model.kind, d.skinType))}` : "Device unavailable"}
                   </p>
                 </div>
               </li>

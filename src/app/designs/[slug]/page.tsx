@@ -5,32 +5,57 @@ import { Brush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { EmptyState } from "@/components/shop/empty-state";
-import { getCategories, getCategoryBySlug, getSkins } from "@/lib/api";
+import { productsService } from "@/lib/services/products.service";
+import { categoriesService } from "@/lib/services/categories.service";
+import type { ApiCategory } from "@/lib/api-types";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return getCategories().map((c) => ({ slug: c.slug }));
+async function fetchCategories(): Promise<ApiCategory[]> {
+  try {
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const res = await fetch(`${base}/categories`, { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items: ApiCategory[] = json.data ?? json;
+    return Array.isArray(items) ? items.filter((c) => c.isActive) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function generateStaticParams() {
+  const categories = await fetchCategories();
+  return categories.map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const cat = getCategoryBySlug(slug);
+  const categories = await fetchCategories();
+  const cat = categories.find((c) => c.slug === slug);
   if (!cat) return {};
   return {
     title: `${cat.name} Skins — Phone & Laptop Skins`,
-    description: `Browse ${cat.name.toLowerCase()} phone and laptop skins. ${cat.blurb}.`,
+    description: `Browse ${cat.name.toLowerCase()} phone and laptop skins. ${cat.description ?? ""}`,
     alternates: { canonical: `/designs/${slug}` },
   };
 }
 
 export default async function DesignCategoryPage({ params }: Props) {
   const { slug } = await params;
-  const cat = getCategoryBySlug(slug);
+  const categories = await fetchCategories();
+  const cat = categories.find((c) => c.slug === slug);
   if (!cat) notFound();
-  const skins = getSkins({ categoryIds: [cat.id], sort: "popular" });
+
+  let products: Awaited<ReturnType<typeof productsService.list>>["items"] = [];
+  try {
+    const res = await productsService.list({ categoryId: cat.id, limit: 48, sort: "popular" });
+    products = res.items;
+  } catch {
+    products = [];
+  }
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -46,7 +71,8 @@ export default async function DesignCategoryPage({ params }: Props) {
         <div>
           <h1 className="text-headline-lg">{cat.name} Skins</h1>
           <p className="mt-1.5 text-muted-foreground" aria-live="polite">
-            {skins.length} {skins.length === 1 ? "design" : "designs"} · {cat.blurb}
+            {products.length} {products.length === 1 ? "design" : "designs"}
+            {cat.description ? ` · ${cat.description}` : ""}
           </p>
         </div>
         <Button variant="outline" size="lg" className="h-12" asChild>
@@ -57,8 +83,8 @@ export default async function DesignCategoryPage({ params }: Props) {
       </header>
 
       <div className="mt-10">
-        {skins.length ? (
-          <ProductGrid skins={skins} />
+        {products.length ? (
+          <ProductGrid products={products} />
         ) : (
           <EmptyState
             icon={Brush}

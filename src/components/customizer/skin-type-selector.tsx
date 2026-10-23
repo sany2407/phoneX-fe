@@ -3,16 +3,17 @@
 import { useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import type { DeviceModel, MaterialId } from "@/lib/types";
+import type { MaterialId } from "@/lib/types";
+import type { DeviceKind } from "@/lib/live-devices";
 import { SKIN_TYPES, customPriceLabel } from "@/lib/custom-pricing";
 import { cn } from "@/lib/utils";
 
 export function SkinTypeSelector({
-  model,
+  kind,
   value,
   onChange,
 }: {
-  model: DeviceModel;
+  kind: DeviceKind;
   value: MaterialId;
   onChange: (t: MaterialId) => void;
 }) {
@@ -36,7 +37,7 @@ export function SkinTypeSelector({
           >
             <span className="block text-sm font-medium">{t.label}</span>
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              {customPriceLabel(model, t.id)}
+              {customPriceLabel(kind, t.id)}
             </span>
           </button>
         ))}

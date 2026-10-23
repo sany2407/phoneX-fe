@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MapPin, Plus, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
@@ -10,26 +10,36 @@ import { Label } from "@/components/ui/label";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 import { useAuth } from "@/lib/stores/auth-store";
 import { useOrders } from "@/lib/stores/orders-store";
+import { useAddresses } from "@/lib/stores/addresses-store";
+import type { AddressPayload } from "@/lib/api-types";
+
+const EMPTY_ADDRESS: AddressPayload = {
+  name: "",
+  phone: "",
+  line1: "",
+  line2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "India",
+};
 
 export default function AccountPage() {
   const hydrated = useHydrated();
   const user = useAuth((s) => s.user);
-  const addresses = useAuth((s) => s.addresses);
-  const addAddress = useAuth((s) => s.addAddress);
-  const removeAddress = useAuth((s) => s.removeAddress);
+  const addresses = useAddresses((s) => s.items);
+  const fetchAddresses = useAddresses((s) => s.fetchAll);
+  const addAddress = useAddresses((s) => s.create);
+  const removeAddress = useAddresses((s) => s.remove);
   const orderCount = useOrders((s) => s.orders.length);
 
   const [showAddrForm, setShowAddrForm] = useState(false);
-  const [addr, setAddr] = useState({
-    label: "",
-    name: "",
-    fullName: "",
-    phone: "",
-    line1: "",
-    city: "",
-    state: "",
-    pincode: "",
-  });
+  const [saving, setSaving] = useState(false);
+  const [addr, setAddr] = useState<AddressPayload>(EMPTY_ADDRESS);
+
+  useEffect(() => {
+    if (user) fetchAddresses();
+  }, [user, fetchAddresses]);
 
   if (!hydrated) {
     return (
@@ -112,22 +122,24 @@ export default function AccountPage() {
                     Default
                   </span>
                 )}
-                <p className="text-sm font-semibold">{a.label || a.fullName}</p>
+                <p className="text-sm font-semibold">{a.name}</p>
                 <address className="mt-1 not-italic text-sm leading-6 text-muted-foreground">
-                  {a.fullName}
+                  {[a.line1, a.line2].filter(Boolean).join(", ")}
                   <br />
-                  {a.line1}
-                  <br />
-                  {a.city}, {a.state} {a.pincode}
+                  {a.city}, {a.state} {a.postalCode}
                   <br />
                   {a.phone}
                 </address>
                 <button
                   type="button"
-                  aria-label={`Delete ${a.label || a.fullName}`}
-                  onClick={() => {
-                    removeAddress(a.id);
-                    toast.success("Address removed");
+                  aria-label={`Delete address for ${a.name}`}
+                  onClick={async () => {
+                    try {
+                      await removeAddress(a.id);
+                      toast.success("Address removed");
+                    } catch {
+                      toast.error("Could not remove the address.");
+                    }
                   }}
                   className="absolute bottom-3 right-3 grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
                 >
@@ -141,27 +153,29 @@ export default function AccountPage() {
         {showAddrForm && (
           <form
             className="mt-5 grid gap-3 border-t pt-5 sm:grid-cols-2"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              if (!addr.fullName.trim() || !addr.line1.trim() || !/^\d{6}$/.test(addr.pincode)) {
+              if (!addr.name.trim() || !addr.line1.trim() || !/^\d{6}$/.test(addr.postalCode)) {
                 toast.error("Fill name, address line and a valid 6-digit PIN code.");
                 return;
               }
-              addAddress(addr);
-              setAddr({ label: "", name: "", fullName: "", phone: "", line1: "", city: "", state: "", pincode: "" });
-              setShowAddrForm(false);
-              toast.success("Address saved");
+              setSaving(true);
+              try {
+                await addAddress({ ...addr, country: addr.country || "India" });
+                setAddr(EMPTY_ADDRESS);
+                setShowAddrForm(false);
+                toast.success("Address saved");
+              } catch {
+                toast.error("Could not save the address.");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="ad-label">Label (e.g. Home)</Label>
-              <Input id="ad-label" className="h-11" value={addr.label}
-                onChange={(e) => setAddr({ ...addr, label: e.target.value })} />
-            </div>
             <div className="space-y-1.5">
               <Label htmlFor="ad-name">Full name</Label>
-              <Input id="ad-name" className="h-11" value={addr.fullName}
-                onChange={(e) => setAddr({ ...addr, name: e.target.value, fullName: e.target.value })} required />
+              <Input id="ad-name" className="h-11" value={addr.name}
+                onChange={(e) => setAddr({ ...addr, name: e.target.value })} required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ad-phone">Phone</Label>
@@ -172,6 +186,11 @@ export default function AccountPage() {
               <Label htmlFor="ad-line1">Address</Label>
               <Input id="ad-line1" className="h-11" value={addr.line1}
                 onChange={(e) => setAddr({ ...addr, line1: e.target.value })} required />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="ad-line2">Apartment, landmark (optional)</Label>
+              <Input id="ad-line2" className="h-11" value={addr.line2 ?? ""}
+                onChange={(e) => setAddr({ ...addr, line2: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ad-city">City</Label>
@@ -186,12 +205,14 @@ export default function AccountPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="ad-pin">PIN code</Label>
-                <Input id="ad-pin" inputMode="numeric" className="h-11" value={addr.pincode}
-                  onChange={(e) => setAddr({ ...addr, pincode: e.target.value })} required />
+                <Input id="ad-pin" inputMode="numeric" className="h-11" value={addr.postalCode}
+                  onChange={(e) => setAddr({ ...addr, postalCode: e.target.value })} required />
               </div>
             </div>
             <div className="sm:col-span-2">
-              <Button type="submit">Save address</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save address"}
+              </Button>
             </div>
           </form>
         )}

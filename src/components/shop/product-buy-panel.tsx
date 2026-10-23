@@ -13,48 +13,51 @@ import {
 } from "@/components/ui/select";
 import { WishlistButton } from "@/components/shop/wishlist-button";
 import { useCart } from "@/lib/stores/cart-store";
+import { useProductSelection } from "@/lib/stores/product-selection-store";
 import { toast } from "sonner";
-import type { DeviceModel, DeviceType, Skin } from "@/lib/types";
-import {
-  compatibleModels,
-  discountedPrice,
-  finalPrice,
-  materialLabel,
-} from "@/lib/api";
+import type { ApiProduct, ApiVariant } from "@/lib/api-types";
+import { primaryImage } from "@/lib/product-utils";
 import { formatINR } from "@/lib/utils";
 
-export function ProductBuyPanel({
-  skin,
-  deviceType,
-}: {
-  skin: Skin;
-  deviceType: DeviceType;
-}) {
+export function ProductBuyPanel({ product }: { product: ApiProduct }) {
   const router = useRouter();
   const add = useCart((s) => s.add);
-  const models = useMemo(() => compatibleModels(skin).filter((m) => m.type === deviceType), [skin, deviceType]);
-  const [deviceId, setDeviceId] = useState(models[0]?.id ?? "");
+  const selectVariant = useProductSelection((s) => s.select);
+
+  const variants = useMemo(
+    () => (product.variants ?? []).filter((v) => v.isActive),
+    [product]
+  );
+  const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
   const [qty, setQty] = useState(1);
 
-  const model: DeviceModel | undefined = models.find((m) => m.id === deviceId);
-  const brands = [...new Set(models.map((m) => m.brandId))];
-  const price = discountedPrice(skin, deviceType);
-  const original = skin.discountPct > 0 ? finalPrice(skin, deviceType) : undefined;
+  const variant: ApiVariant | undefined =
+    variants.find((v) => v.id === variantId) ?? variants[0];
+
+  const price = variant ? Number(variant.price) : NaN;
+  const compare =
+    variant?.comparePrice != null ? Number(variant.comparePrice) : NaN;
+  const original = Number.isFinite(compare) && compare > price ? compare : undefined;
+  const inStock = (variant?.stock ?? 0) > 0;
+  const modelName = variant?.deviceModel
+    ? `${variant.deviceModel.brand?.name ?? ""} ${variant.deviceModel.name}`.trim()
+    : "";
 
   const addToCart = () => {
-    if (!model) return;
+    if (!variant || !Number.isFinite(price)) return;
     add({
-      key: `skin:${skin.id}:${model.id}`,
+      key: `skin:${variant.id}`,
       kind: "skin",
-      title: `${skin.name}`,
-      subtitle: model.name,
-      deviceId: model.id,
-      deviceName: model.name,
+      title: product.name,
+      subtitle: modelName,
+      deviceId: variant.deviceModelId,
+      deviceName: modelName,
       unitPrice: price,
-      refId: skin.id,
+      thumb: variant.images?.[0] ?? primaryImage(product),
+      refId: variant.id,
     });
     toast.success("Added to cart", {
-      description: `${skin.name} · ${model.name}`,
+      description: `${product.name} · ${modelName}`,
     });
   };
 
@@ -63,56 +66,55 @@ export function ProductBuyPanel({
     router.push("/checkout");
   };
 
+  if (variants.length === 0) {
+    return (
+      <p className="rounded-lg bg-secondary px-4 py-3 text-sm text-muted-foreground">
+        This design isn&apos;t cut for any device yet — check back soon or
+        create a custom version in the studio.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Device selector */}
+      {/* Variant selector */}
       <fieldset>
         <legend className="text-sm font-semibold">
-          Select your device <span className="text-muted-foreground font-normal">— only compatible models are listed</span>
+          Select your device{" "}
+          <span className="text-muted-foreground font-normal">
+            — {variants.length} cut{variants.length === 1 ? "" : "s"} available
+          </span>
         </legend>
-        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Brand">
-          {brands.map((b) => (
-            <button
-              key={b}
-              type="button"
-              aria-pressed={(model ? model.brandId : brands[0]) === b}
-              onClick={() => {
-                const first = models.find((m) => m.brandId === b);
-                if (first) setDeviceId(first.id);
-              }}
-              className={`press rounded-lg border px-3.5 py-2 text-sm font-medium capitalize ${
-                (model ? model.brandId : brands[0]) === b
-                  ? "border-transparent bg-foreground text-background"
-                  : "hover:bg-muted"
-              }`}
-            >
-              {b.replace(/(^|\s)\S/g, (c) => c.toUpperCase())}
-            </button>
-          ))}
-        </div>
         <Select
-          value={deviceId}
+          value={variant?.id}
           onValueChange={(v) => {
-            setDeviceId(v);
-            const m = models.find((x) => x.id === v);
-            if (m) toast.message(`${m.name} selected`, { description: "Prices and fit update for this device." });
+            setVariantId(v);
+            selectVariant(product.id, v);
+            const m = variants.find((x) => x.id === v);
+            if (m) toast.message("Device updated", { description: "Price and fit follow this cut." });
           }}
         >
           <SelectTrigger className="mt-3 h-12 w-full text-[15px]" aria-label="Device model">
             <SelectValue placeholder="Choose model" />
           </SelectTrigger>
           <SelectContent>
-            {models.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.name}
-              </SelectItem>
-            ))}
+            {variants.map((v) => {
+              const label = v.deviceModel
+                ? `${v.deviceModel.brand?.name ?? ""} ${v.deviceModel.name}`.trim()
+                : v.sku;
+              return (
+                <SelectItem key={v.id} value={v.id}>
+                  {label} — {formatINR(Number(v.price))}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
-        {model && (
+        {variant && (
           <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground" aria-live="polite">
             <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
-            Precision cut for {model.name} — camera & port cutouts included.
+            Precision cut
+            {modelName ? ` for ${modelName}` : ""} — camera &amp; port cutouts included.
           </p>
         )}
       </fieldset>
@@ -140,16 +142,18 @@ export function ProductBuyPanel({
             <Plus className="size-4" />
           </button>
         </div>
-        <p className="ml-auto text-right">
-          <span className="block text-price-point">{formatINR(price * qty)}</span>
-          {original && (
-            <s className="text-xs text-muted-foreground/70">{formatINR(original * qty)}</s>
-          )}
-        </p>
+        {Number.isFinite(price) && (
+          <p className="ml-auto text-right">
+            <span className="block text-price-point">{formatINR(price * qty)}</span>
+            {original && (
+              <s className="text-xs text-muted-foreground/70">{formatINR(original * qty)}</s>
+            )}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-[1fr_auto] gap-3 sm:grid-cols-2">
-        <Button size="lg" className="h-12 text-base" onClick={addToCart}>
+        <Button size="lg" className="h-12 text-base" onClick={addToCart} disabled={!inStock}>
           <ShoppingBag /> Add to Cart
         </Button>
         <Button
@@ -157,11 +161,15 @@ export function ProductBuyPanel({
           variant="outline"
           className="h-12 text-base"
           onClick={buyNow}
+          disabled={!inStock}
         >
           <Zap /> Buy Now
         </Button>
-        <WishlistButton slug={skin.slug} name={skin.name} className="col-span-full size-12 w-full justify-self-stretch sm:hidden" />
+        <WishlistButton slug={product.slug} name={product.name} className="col-span-full size-12 w-full justify-self-stretch sm:hidden" />
       </div>
+      {!inStock && variant && (
+        <p className="text-sm text-destructive">Out of stock for this device right now.</p>
+      )}
 
       <ul className="space-y-2.5 text-sm text-muted-foreground">
         <li className="flex items-center gap-2">
@@ -170,7 +178,8 @@ export function ProductBuyPanel({
         </li>
         <li className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
-          {materialLabel(skin.material)} — residue-free removal, 1-year warranty
+          <span className="capitalize">{product.material.replace("-", " ")}</span>
+          &nbsp;— residue-free removal, 1-year warranty
         </li>
       </ul>
     </div>
