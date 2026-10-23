@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import { ordersService } from "@/lib/services/orders.service";
 import { tokenStore } from "@/lib/api-client";
 import type { ApiOrder, ApiOrderStatus } from "@/lib/api-types";
+import { primaryImage } from "@/lib/product-utils";
 import { ORDER_STATUSES, type Order, type OrderStatus } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -35,7 +36,7 @@ export function toFrontendOrder(apiOrder: ApiOrder): Order {
       deviceName: item.variant.deviceModel.name,
       unitPrice: item.unitPrice,
       qty: item.quantity,
-      thumb: item.variant.product.images.find((img) => img.isPrimary)?.url,
+      thumb: primaryImage(item.variant.product),
     })),
     subtotal: apiOrder.subtotal,
     discount: apiOrder.discount,
@@ -48,13 +49,13 @@ export function toFrontendOrder(apiOrder: ApiOrder): Order {
       at: new Date(h.createdAt).getTime(),
     })),
     customer: {
-      fullName: addr.fullName,
+      name: addr.name,
       email: apiOrder.userId, // email not in shipping addr; use userId as fallback
       phone: addr.phone,
-      line1: addr.line1,
+      line1: [addr.line1, addr.line2].filter(Boolean).join(", "),
       city: addr.city,
       state: addr.state,
-      pincode: addr.pincode,
+      postalCode: addr.postalCode,
     },
   };
 }

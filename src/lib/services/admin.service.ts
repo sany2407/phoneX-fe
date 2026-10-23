@@ -1,4 +1,5 @@
-import { api } from "@/lib/api-client";import type {
+import { api, apiList } from "@/lib/api-client";
+import type {
   ApiOrder,
   ApiOrderStatus,
   ApiProduct,
@@ -37,6 +38,27 @@ export interface AddProductImagesPayload {
   images: string[];
 }
 
+/** One device model this design is cut for, inside a create-with-variants call. */
+export interface CreateProductVariantInput {
+  deviceModelId: string;
+  price: number;
+  comparePrice?: number;
+  stock: number;
+  /** Phone mockups for this specific model (upload to the `variants` folder). */
+  images?: string[];
+}
+
+export interface CreateProductWithVariantsPayload {
+  name: string;
+  description?: string;
+  categoryId: string;
+  /** Flat design artwork (upload to the `products` folder). */
+  images?: string[];
+  isFeatured?: boolean;
+  /** One entry per device model. Device models must be unique. */
+  variants: CreateProductVariantInput[];
+}
+
 // ---------------------------------------------------------------------------
 // Variants
 // ---------------------------------------------------------------------------
@@ -46,13 +68,18 @@ export interface CreateVariantPayload {
   deviceModelId: string;
   sku: string;
   price: number;
+  comparePrice?: number;
   stock: number;
+  /** Per-variant mockups (the design shown on this specific device model). */
+  images?: string[];
 }
 
 export interface UpdateVariantPayload {
-  sku?: string;
   price?: number;
+  comparePrice?: number | null;
   stock?: number;
+  /** Per-variant mockups (upload via POST /upload/single?folder=variants). */
+  images?: string[];
   isActive?: boolean;
 }
 
@@ -66,7 +93,7 @@ export interface CreateBrandPayload {
   logo?: string;
 }
 
-export interface UpdateBrandPayload extends Partial<CreateBrandPayload> {}
+export type UpdateBrandPayload = Partial<CreateBrandPayload>;
 
 // ---------------------------------------------------------------------------
 // Models
@@ -153,8 +180,11 @@ export const adminService = {
   },
 
   /** GET /admin/analytics/products */
-  getTopProducts(): Promise<TopProduct[]> {
-    return api.get<TopProduct[]>("/admin/analytics/products");
+  getTopProducts(params?: { limit?: number }): Promise<TopProduct[]> {
+    const qs = new URLSearchParams();
+    if (params?.limit) qs.set("limit", String(params.limit));
+    const q = qs.toString() ? `?${qs}` : "";
+    return api.get<TopProduct[]>(`/admin/analytics/products${q}`);
   },
 
   /** GET /admin/analytics/sales */
@@ -184,7 +214,7 @@ export const adminService = {
     if (params?.limit)  qs.set("limit",  String(params.limit));
     if (params?.status) qs.set("status", params.status);
     const q = qs.toString() ? `?${qs}` : "";
-    return api.get<PaginatedResponse<ApiOrder>>(`/admin/orders${q}`);
+    return apiList<ApiOrder>(`/admin/orders${q}`);
   },
 
   /** GET /admin/orders/:id */
@@ -202,6 +232,20 @@ export const adminService = {
   /** POST /admin/products */
   createProduct(payload: CreateProductPayload): Promise<ApiProduct> {
     return api.post<ApiProduct>("/admin/products", payload);
+  },
+
+  /**
+   * POST /admin/products/with-variants
+   *
+   * Product + every variant in a single request, committed in one DB
+   * transaction — if any variant fails the whole thing rolls back.
+   * SKUs are generated server-side as `<slug>-<deviceModelId>`.
+   * Returns the product with its variants populated.
+   */
+  createProductWithVariants(
+    payload: CreateProductWithVariantsPayload
+  ): Promise<ApiProduct> {
+    return api.post<ApiProduct>("/admin/products/with-variants", payload);
   },
 
   /** PUT /admin/products/:id */
@@ -232,9 +276,21 @@ export const adminService = {
 
   // ── Inventory ──────────────────────────────────────────────────────────────
 
-  /** GET /admin/inventory */
-  getInventory(): Promise<InventoryItem[]> {
-    return api.get<InventoryItem[]>("/admin/inventory");
+  /** GET /admin/inventory — backend returns { variants, total } */
+  async getInventory(params?: {
+    lowStock?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<InventoryItem[]> {
+    const qs = new URLSearchParams();
+    if (params?.lowStock) qs.set("lowStock", "true");
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.limit) qs.set("limit", String(params.limit));
+    const q = qs.toString() ? `?${qs}` : "";
+    const res = await api.get<InventoryItem[] | { variants: InventoryItem[]; total: number }>(
+      `/admin/inventory${q}`
+    );
+    return Array.isArray(res) ? res : (res?.variants ?? []);
   },
 
   /** PATCH /admin/inventory/:variantId */
@@ -341,8 +397,11 @@ export const adminService = {
   // ── Coupons ────────────────────────────────────────────────────────────────
 
   /** GET /admin/coupons */
-  getCoupons(): Promise<ApiCoupon[]> {
-    return api.get<ApiCoupon[]>("/admin/coupons");
+  getCoupons(params?: { isActive?: boolean }): Promise<ApiCoupon[]> {
+    const qs = new URLSearchParams();
+    if (params?.isActive !== undefined) qs.set("isActive", String(params.isActive));
+    const q = qs.toString() ? `?${qs}` : "";
+    return api.get<ApiCoupon[]>(`/admin/coupons${q}`);
   },
 
   /** POST /admin/coupons */
@@ -379,31 +438,22 @@ export const adminService = {
 
   // ── Users ──────────────────────────────────────────────────────────────────
 
-  /** GET /admin/users — backend returns { data: [...], pagination: {...} } */
-  async getUsers(params?: { page?: number; limit?: number }): Promise<{ items: AdminUserListItem[]; total: number; page: number; totalPages: number }> {
+  /** GET /admin/users */
+  async getUsers(params?: { page?: number; limit?: number; role?: string; search?: string; isActive?: boolean }): Promise<{ items: AdminUserListItem[]; total: number; page: number; totalPages: number }> {
     const qs = new URLSearchParams();
     if (params?.page)  qs.set("page",  String(params.page));
     if (params?.limit) qs.set("limit", String(params.limit));
+    if (params?.role)  qs.set("role",  params.role);
+    if (params?.search) qs.set("search", params.search);
+    if (params?.isActive !== undefined) qs.set("isActive", String(params.isActive));
     const q = qs.toString() ? `?${qs}` : "";
 
-    // The api-client unwraps { success, data } → returns data (the array).
-    // But pagination sits alongside data in the envelope, so we fetch raw.
-    const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
-    const { tokenStore } = await import("@/lib/api-client");
-    const res = await fetch(`${BASE_URL}/admin/users${q}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(tokenStore.getAccess() ? { Authorization: `Bearer ${tokenStore.getAccess()}` } : {}),
-      },
-    });
-    const json = await res.json();
-    const items: AdminUserListItem[] = json.data ?? [];
-    const pag = json.pagination ?? {};
+    const res = await apiList<AdminUserListItem>(`/admin/users${q}`);
     return {
-      items,
-      total:      pag.total      ?? items.length,
-      page:       pag.page       ?? 1,
-      totalPages: pag.totalPages ?? 1,
+      items: res.items,
+      total: res.total,
+      page: res.page,
+      totalPages: res.totalPages,
     };
   },
 

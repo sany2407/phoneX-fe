@@ -3,8 +3,11 @@ import type { ApiCategory } from "@/lib/api-types";
 
 export const categoriesService = {
   /** GET /categories */
-  getAll(): Promise<ApiCategory[]> {
-    return api.get<ApiCategory[]>("/categories", { public: true });
+  getAll(opts?: { revalidate?: number }): Promise<ApiCategory[]> {
+    return api.get<ApiCategory[]>("/categories", {
+      public: true,
+      ...(opts?.revalidate != null ? { next: { revalidate: opts.revalidate } } : {}),
+    });
   },
 
   /** GET /categories/:slug  — takes a slug (e.g. "abstract"), not a UUID */
@@ -12,18 +15,18 @@ export const categoriesService = {
     return api.get<ApiCategory>(`/categories/${slug}`, { public: true });
   },
 
-  /** POST /categories/admin */
+  /** POST /admin/categories */
   create(payload: { name: string; slug: string; description?: string; imageUrl?: string }): Promise<ApiCategory> {
-    return api.post<ApiCategory>("/categories/admin", payload);
+    return api.post<ApiCategory>("/admin/categories", payload);
   },
 
-  /** PUT /categories/admin/:id */
+  /** PUT /admin/categories/:id */
   update(id: string, payload: Partial<{ name: string; slug: string; description: string; imageUrl: string; isActive: boolean }>): Promise<ApiCategory> {
-    return api.put<ApiCategory>(`/categories/admin/${id}`, payload);
+    return api.put<ApiCategory>(`/admin/categories/${id}`, payload);
   },
 
-  /** DELETE /categories/admin/:id */
+  /** DELETE /admin/categories/:id */
   delete(id: string): Promise<void> {
-    return api.delete<void>(`/categories/admin/${id}`);
+    return api.delete<void>(`/admin/categories/${id}`);
   },
 };

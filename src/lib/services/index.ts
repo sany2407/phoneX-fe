@@ -11,3 +11,4 @@ export { paymentsService } from "./payments.service";
 export { couponsService } from "./coupons.service";
 export { reviewsService } from "./reviews.service";
 export { adminService } from "./admin.service";
+export { healthService } from "./health.service";

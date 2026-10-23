@@ -137,6 +137,8 @@ interface RequestOptions {
   body?: unknown;
   /** When true the request will NOT include the Authorization header */
   public?: boolean;
+  /** When true, return the full `{ success, data, pagination }` envelope */
+  raw?: boolean;
   /** Next.js fetch cache options (server-side only) */
   next?: NextFetchRequestConfig;
   /** Standard fetch cache option */
@@ -202,6 +204,7 @@ export async function apiRequest<T = unknown>(
   }
 
   // Most endpoints wrap data in { success, data, message }
+  if (options.raw) return json as unknown as T;
   return (json.data ?? json) as T;
 }
 
@@ -225,3 +228,35 @@ export const api = {
   delete: <T>(path: string, opts?: RequestOptions) =>
     apiRequest<T>("DELETE", path, opts),
 };
+
+// ---------------------------------------------------------------------------
+// Paginated list helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch a list endpoint that returns `{ data: T[], pagination }` and normalise
+ * it to `{ items, total, page, limit, totalPages }`. The shared `api.get`
+ * unwraps `data` and would drop the sibling `pagination`, so this uses the raw
+ * envelope instead.
+ */
+export async function apiList<T>(
+  path: string,
+  opts?: Omit<RequestOptions, "body" | "raw">
+): Promise<import("@/lib/api-types").PaginatedResponse<T>> {
+  const env = await apiRequest<
+    T[] | { data?: T[]; pagination?: import("@/lib/api-types").PaginationMeta }
+  >("GET", path, { ...opts, raw: true });
+
+  const data = (env as { data?: T[] }).data;
+  const items: T[] = Array.isArray(data) ? data : [];
+  const p: Partial<import("@/lib/api-types").PaginationMeta> =
+    (env as { pagination?: import("@/lib/api-types").PaginationMeta }).pagination ?? {};
+
+  return {
+    items,
+    total: Number(p.total ?? items.length),
+    page: Number(p.page ?? 1),
+    limit: Number(p.limit ?? items.length),
+    totalPages: Number(p.totalPages ?? 1),
+  };
+}

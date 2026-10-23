@@ -3,8 +3,11 @@ import type { ApiBrand, ApiDeviceModel, ApiDeviceType, ApiVariant } from "@/lib/
 
 export const devicesService = {
   /** GET /devices/types — Smartphone, Laptop, Tablet… */
-  getDeviceTypes(): Promise<ApiDeviceType[]> {
-    return api.get<ApiDeviceType[]>("/devices/types", { public: true });
+  getDeviceTypes(opts?: { revalidate?: number }): Promise<ApiDeviceType[]> {
+    return api.get<ApiDeviceType[]>("/devices/types", {
+      public: true,
+      ...(opts?.revalidate != null ? { next: { revalidate: opts.revalidate } } : {}),
+    });
   },
 
   /** GET /devices/types/:typeSlug/models — all models of a type, cross-brand */
@@ -15,8 +18,11 @@ export const devicesService = {
   },
 
   /** GET /devices/brands */
-  getBrands(): Promise<ApiBrand[]> {
-    return api.get<ApiBrand[]>("/devices/brands", { public: true });
+  getBrands(opts?: { revalidate?: number }): Promise<ApiBrand[]> {
+    return api.get<ApiBrand[]>("/devices/brands", {
+      public: true,
+      ...(opts?.revalidate != null ? { next: { revalidate: opts.revalidate } } : {}),
+    });
   },
 
   /** GET /devices/brands/:brandSlug */
@@ -40,31 +46,44 @@ export const devicesService = {
     );
   },
 
-  /** GET /devices/brands/:brandSlug/models/:modelSlug/skins */
-  getSkinsForModel(
+  /**
+   * GET /variants/skins/:brandSlug/:modelSlug
+   * Skins for a model live under /variants, not /devices.
+   */
+  async getSkinsForModel(
     brandSlug: string,
     modelSlug: string
   ): Promise<ApiVariant[]> {
-    return api.get<ApiVariant[]>(
-      `/devices/brands/${brandSlug}/models/${modelSlug}/skins`,
+    const res = await api.get<ApiVariant[] | { variants: ApiVariant[] }>(
+      `/variants/skins/${brandSlug}/${modelSlug}`,
       { public: true }
     );
+    return Array.isArray(res) ? res : (res.variants ?? []);
   },
 
   /**
-   * Fetch all models across all brands in one shot.
-   * Calls GET /devices/brands (with models included) or falls back to
-   * fetching each brand's models individually.
+   * Fetch every active model across all brands, each with its brand included.
+   *
+   * Strategy: `GET /devices/types` (each type carries its model count) followed
+   * by one `GET /devices/types/:slug/models` per non-empty type — currently ~4
+   * requests total.
+   *
+   * Do NOT fan out one request per brand: with ~25 brands that is 26 requests
+   * per call and trips the API rate limiter (200 req / 15 min).
+   *
+   * Failures propagate. This used to `catch` and return `[]`, which made a
+   * rate-limited or unreachable API indistinguishable from an empty catalog —
+   * the store reported "ready" with no models and the UI confidently rendered
+   * "No models found".
    */
   async getAllModels(): Promise<ApiDeviceModel[]> {
-    const brands = await api.get<ApiBrand[]>("/devices/brands", { public: true });
-    const results = await Promise.all(
-      brands.map((b) =>
-        api
-          .get<ApiDeviceModel[]>(`/devices/brands/${b.slug}/models`, { public: true })
-          .catch(() => [] as ApiDeviceModel[])
-      )
+    const types = await devicesService.getDeviceTypes();
+    const relevant = types.filter(
+      (t) => !t._count || (t._count.models ?? 0) > 0
     );
-    return results.flat();
+    const lists = await Promise.all(
+      relevant.map((t) => devicesService.getModelsByType(t.slug))
+    );
+    return lists.flat();
   },
 };

@@ -3,20 +3,23 @@ import type {
   ApiReview,
   CreateReviewPayload,
   UpdateReviewPayload,
-  PaginatedResponse,
+  ProductReviewsResponse,
 } from "@/lib/api-types";
 
 export const reviewsService = {
-  /** GET /products/:productId/reviews */
+  /**
+   * GET /products/:productId/reviews
+   * Backend returns `{ reviews, ratingSummary }` (only approved reviews).
+   */
   getForProduct(
     productId: string,
     params?: { page?: number; limit?: number }
-  ): Promise<PaginatedResponse<ApiReview>> {
+  ): Promise<ProductReviewsResponse> {
     const qs = new URLSearchParams();
     if (params?.page) qs.set("page", String(params.page));
     if (params?.limit) qs.set("limit", String(params.limit));
     const q = qs.toString() ? `?${qs}` : "";
-    return api.get<PaginatedResponse<ApiReview>>(
+    return api.get<ProductReviewsResponse>(
       `/products/${productId}/reviews${q}`,
       { public: true }
     );

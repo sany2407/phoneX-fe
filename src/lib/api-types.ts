@@ -18,6 +18,24 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+/** Sibling `pagination` object returned alongside list payloads. */
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+}
+
+/** The raw `{ success, message, data, pagination }` envelope. */
+export interface ApiEnvelope<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+  pagination?: PaginationMeta;
+}
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -113,6 +131,7 @@ export interface ApiCategory {
   imageUrl?: string;   // actual field name the backend sends
   isActive: boolean;
   createdAt: string;
+  _count?: { products: number };
 }
 
 // ---------------------------------------------------------------------------
@@ -128,38 +147,31 @@ export interface ApiProduct {
   category?: ApiCategory;
   material: string;
   finish: string;
-  basePrice: number;
-  discountPct: number;
-  rating: number;
-  reviewCount: number;
+  tags?: string[];
   isNew: boolean;
   isFeatured: boolean;
+  rating: number;
+  reviewCount: number;
   isActive: boolean;
-  images: ApiProductImage[];
-  tags?: string[];
+  images: string[];
+  variants?: ApiVariant[];
   createdAt: string;
   updatedAt: string;
-}
-
-export interface ApiProductImage {
-  id: string;
-  url: string;
-  alt?: string;
-  isPrimary: boolean;
-  sortOrder: number;
 }
 
 export interface ProductListParams {
   page?: number;
   limit?: number;
-  categorySlug?: string;
+  categoryId?: string;
   material?: string;
   finish?: string;
-  minPrice?: number;
   maxPrice?: number;
   minRating?: number;
   inStock?: boolean;
-  sort?: "featured" | "newest" | "popular" | "price-asc" | "price-desc" | "rating";
+  deviceType?: string;
+  onSale?: boolean;
+  search?: string;
+  sort?: "featured" | "newest" | "popular" | "price-asc" | "price-desc" | "rating" | "name_asc" | "name_desc";
 }
 
 // ---------------------------------------------------------------------------
@@ -173,10 +185,11 @@ export interface ApiVariant {
   deviceModelId: string;
   deviceModel?: ApiDeviceModel;
   sku: string;
-  price: number;
+  price: number | string;
+  comparePrice?: number | string | null;
   stock: number;
   isActive: boolean;
-  images?: ApiProductImage[];
+  images?: string[];
   createdAt: string;
 }
 
@@ -237,36 +250,36 @@ export interface ApiWishlist {
 // Addresses
 // ---------------------------------------------------------------------------
 
+/**
+ * Address as returned by the backend (`/addresses`).
+ * Mirrors the Prisma `Address` model — see `phoneX-be/src/modules/addresses`.
+ */
 export interface ApiAddress {
   id: string;
   userId: string;
   name: string;
-  label: string;
-  fullName: string;
   phone: string;
   line1: string;
-  line2?: string;
+  line2?: string | null;
   city: string;
   state: string;
-  pincode: string;
+  postalCode: string;
   country: string;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+/** Body accepted by `POST /addresses` and `PUT /addresses/:id`. */
 export interface AddressPayload {
   name: string;
-  label: string;
-  fullName: string;
   phone: string;
   line1: string;
   line2?: string;
   city: string;
   state: string;
-  pincode: string;
+  postalCode: string;
   country?: string;
-  isDefault?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -277,34 +290,28 @@ export interface ApiCoupon {
   id: string;
   code: string;
   discountType: "PERCENTAGE" | "FLAT" | "FREE_SHIPPING";
-  discountValue: number;
-  minOrderValue?: number | null;
-  maxDiscount?: number | null;
-  validFrom: string;
+  discountValue: number | string;
+  minOrderValue?: number | string | null;
+  maxDiscount?: number | string | null;
+  validFrom?: string;
   validUntil: string;
   usageLimit?: number | null;
-  usedCount: number;
-  isActive: boolean;
-  createdAt: string;
-  // legacy fields (may be absent)
-  label?: string;
-  description?: string;
-  type?: string;
-  value?: number;
-  minOrderAmount?: number;
-  maxUses?: number;
-  expiresAt?: string;
+  usedCount?: number;
+  isActive?: boolean;
+  createdAt?: string;
 }
 
 export interface ValidateCouponPayload {
   code: string;
-  orderAmount: number;
+  /** Order subtotal in rupees — the backend field is `subtotal`. */
+  subtotal: number;
 }
 
 export interface ValidateCouponResponse {
   coupon: ApiCoupon;
-  discount: number;
-  freeShipping: boolean;
+  discountAmount: number;
+  discountType: "PERCENTAGE" | "FLAT" | "FREE_SHIPPING";
+  discountValue: number | string;
 }
 
 // ---------------------------------------------------------------------------
@@ -400,25 +407,47 @@ export interface ApiReview {
   id: string;
   productId: string;
   userId: string;
-  user?: Pick<ApiUser, "id" | "name">;
+  orderId?: string;
+  user?: { id?: string; name?: string; email?: string };
   rating: number;
-  title?: string;
-  body: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  title?: string | null;
+  body?: string | null;
+  isApproved?: boolean;
+  isVerifiedPurchase?: boolean;
+  product?: { name?: string };
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateReviewPayload {
+  /** Order id that delivered this product — required by the backend. */
+  orderId: string;
   rating: number;
   title?: string;
-  body: string;
+  body?: string;
 }
 
 export interface UpdateReviewPayload {
   rating?: number;
   title?: string;
   body?: string;
+}
+
+/** Distribution of approved reviews for a product. */
+export interface ReviewRatingSummary {
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+  average: number;
+  total: number;
+}
+
+/** Payload of `GET /products/:productId/reviews`. */
+export interface ProductReviewsResponse {
+  reviews: ApiReview[];
+  ratingSummary: ReviewRatingSummary;
 }
 
 // ---------------------------------------------------------------------------

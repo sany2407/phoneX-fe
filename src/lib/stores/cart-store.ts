@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import { cartService } from "@/lib/services/cart.service";
 import { tokenStore } from "@/lib/api-client";
 import type { ApiCart, ApiCartItem } from "@/lib/api-types";
+import { primaryImage } from "@/lib/product-utils";
 import type { CartItem } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -51,7 +52,7 @@ function toCartItem(apiItem: ApiCartItem): CartItem {
     deviceName: deviceModel.name,
     unitPrice: apiItem.unitPrice,
     qty: apiItem.quantity,
-    thumb: product.images.find((img) => img.isPrimary)?.url ?? product.images[0]?.url,
+    thumb: primaryImage(product),
     refId: apiItem.variantId,
   };
 }

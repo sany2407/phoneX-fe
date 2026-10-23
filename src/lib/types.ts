@@ -128,16 +128,20 @@ export interface CartItem {
   designId?: string;
 }
 
+/**
+ * Frontend view-model for a saved address. Mirrors the backend `ApiAddress`
+ * shape so it can be passed around without translation.
+ */
 export interface Address {
   id: string;
   name: string;
-  label: string;
-  fullName: string;
   phone: string;
   line1: string;
+  line2?: string | null;
   city: string;
   state: string;
-  pincode: string;
+  postalCode: string;
+  country?: string;
   isDefault?: boolean;
 }
 
@@ -174,13 +178,13 @@ export interface Order {
   status: OrderStatus;
   history: { status: OrderStatus; at: number }[];
   customer: {
-    fullName: string;
+    name: string;
     email: string;
     phone: string;
     line1: string;
     city: string;
     state: string;
-    pincode: string;
+    postalCode: string;
   };
 }
 

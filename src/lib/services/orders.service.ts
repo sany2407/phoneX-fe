@@ -1,4 +1,4 @@
-import { api } from "@/lib/api-client";
+import { api, apiList } from "@/lib/api-client";
 import type {
   ApiOrder,
   CheckoutPayload,
@@ -17,7 +17,7 @@ export const ordersService = {
     if (params?.page) qs.set("page", String(params.page));
     if (params?.limit) qs.set("limit", String(params.limit));
     const q = qs.toString() ? `?${qs}` : "";
-    return api.get<PaginatedResponse<ApiOrder>>(`/orders${q}`);
+    return apiList<ApiOrder>(`/orders${q}`);
   },
 
   /** GET /orders/:id */
