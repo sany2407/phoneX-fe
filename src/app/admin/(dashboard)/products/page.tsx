@@ -8,8 +8,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
+import { productsService } from "@/lib/services/products.service";
+import { devicesService } from "@/lib/services/devices.service";
 import { uploadMultiple } from "@/lib/services/upload.service";
 import type { ApiCategory, ApiDeviceModel } from "@/lib/api-types";
+import { primaryImage } from "@/lib/product-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -101,12 +104,207 @@ function Modal({ title, wide = false, onClose, children }: {
   );
 }
 
-// ─── Product form ─────────────────────────────────────────────────────────────
-// Fields: name, description, categoryId, images (string[]), isFeatured
+// ─── Draft variant (create-with-variants) ─────────────────────────────────────
 
-function ProductForm({ initial, categories, onSave, onClose }: {
+type ModelWithBrand = ApiDeviceModel & { brand?: { id: string; name: string; slug: string } };
+
+/** A variant row being composed in the create form, before it hits the API. */
+interface DraftVariant {
+  key: string;
+  modelId: string;
+  modelLabel: string;
+  price: string;
+  comparePrice: string;
+  stock: string;
+  images: string[];
+  uploading: boolean;
+}
+
+function newDraft(): DraftVariant {
+  return {
+    key: Math.random().toString(36).slice(2),
+    modelId: "",
+    modelLabel: "",
+    price: "",
+    comparePrice: "",
+    stock: "50",
+    images: [],
+    uploading: false,
+  };
+}
+
+/**
+ * Searchable device-model picker. `exclude` hides models that a sibling
+ * variant row already claimed, so the same model can't be added twice.
+ */
+function ModelPicker({ allModels, value, label, onChange, exclude = [], placeholder }: {
+  allModels: ApiDeviceModel[];
+  value: string;
+  label: string;
+  onChange: (id: string, label: string) => void;
+  exclude?: string[];
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState(label);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const pool = (allModels as ModelWithBrand[]).filter(
+      (m) => m.id === value || !exclude.includes(m.id)
+    );
+    if (!q) return pool.slice(0, 30);
+    return pool
+      .filter((m) => m.name.toLowerCase().includes(q) || m.brand?.name.toLowerCase().includes(q))
+      .slice(0, 20);
+  }, [allModels, query, exclude, value]);
+
+  const selected = (allModels as ModelWithBrand[]).find((m) => m.id === value);
+
+  return (
+    <div className="space-y-1.5">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); onChange("", ""); }}
+          placeholder={placeholder ?? "Search iPhone 16, Galaxy S26…"}
+          className="pl-8"
+        />
+      </div>
+
+      {query.trim().length > 0 && !value && (
+        <ul className="max-h-48 overflow-y-auto rounded-xl border bg-card shadow-md">
+          {results.length === 0 ? (
+            <li className="px-4 py-3 text-sm text-muted-foreground">No models found</li>
+          ) : results.map((m) => {
+            const full = `${m.brand?.name ?? ""} ${m.name}`.trim();
+            return (
+              <li key={m.id}>
+                <button type="button"
+                  onClick={() => { setQuery(full); onChange(m.id, full); }}
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-primary/5">
+                  <span className="font-medium">{m.name}</span>
+                  <span className="text-xs text-muted-foreground">{m.brand?.name}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {selected && (
+        <p className="text-xs font-medium text-primary">
+          ✓ {selected.brand?.name} {selected.name}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** One variant row inside the create form: model, pricing, per-model mockups. */
+function DraftVariantCard({ index, draft, allModels, exclude, onChange, onRemove }: {
+  index: number;
+  draft: DraftVariant;
+  allModels: ApiDeviceModel[];
+  exclude: string[];
+  onChange: (patch: Partial<DraftVariant>) => void;
+  onRemove: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    onChange({ uploading: true });
+    try {
+      const urls = await uploadMultiple(Array.from(files).slice(0, 10), "variants");
+      onChange({ images: [...draft.images, ...urls] });
+      toast.success(`${urls.length} mockup${urls.length > 1 ? "s" : ""} uploaded.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      onChange({ uploading: false });
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border bg-card p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Variant {index + 1}
+        </span>
+        <button type="button" onClick={onRemove}
+          aria-label={`Remove variant ${index + 1}`}
+          className="rounded-lg p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+          <Trash2 className="size-3.5" />
+        </button>
+      </div>
+
+      <ModelPicker
+        allModels={allModels}
+        value={draft.modelId}
+        label={draft.modelLabel}
+        exclude={exclude}
+        onChange={(id, modelLabel) => onChange({ modelId: id, modelLabel })}
+      />
+
+      <div className="grid grid-cols-3 gap-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Price (₹) *</Label>
+          <Input type="number" min="0" value={draft.price}
+            onChange={(e) => onChange({ price: e.target.value })} placeholder="499" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Compare at (₹)</Label>
+          <Input type="number" min="0" value={draft.comparePrice}
+            onChange={(e) => onChange({ comparePrice: e.target.value })} placeholder="599" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Stock</Label>
+          <Input type="number" min="0" value={draft.stock}
+            onChange={(e) => onChange({ stock: e.target.value })} placeholder="50" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs">Mockups for this model</Label>
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple
+          className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+        <Button type="button" variant="outline" size="sm"
+          className="w-full gap-2 border-dashed"
+          onClick={() => fileRef.current?.click()} disabled={draft.uploading}>
+          {draft.uploading
+            ? <><Loader2 className="size-3.5 animate-spin" /> Uploading…</>
+            : <><Upload className="size-3.5" /> Upload mockups</>}
+        </Button>
+        {draft.images.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {draft.images.map((url, i) => (
+              <div key={i} className="group relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="size-11 rounded-md border object-cover" />
+                <button type="button"
+                  onClick={() => onChange({ images: draft.images.filter((_, j) => j !== i) })}
+                  className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <X className="size-2.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Product form ─────────────────────────────────────────────────────────────
+// Create: name, description, categoryId, images, isFeatured + optional variants
+// Edit:   same minus variants (those are added from the expanded product row)
+
+function ProductForm({ initial, categories, allModels, onSave, onClose }: {
   initial?: Product;
   categories: ApiCategory[];
+  allModels: ApiDeviceModel[];
   onSave: (p: Product) => void;
   onClose: () => void;
 }) {
@@ -120,8 +318,19 @@ function ProductForm({ initial, categories, onSave, onClose }: {
   const [isFeatured, setFeatured]  = useState(initial?.isFeatured ?? false);
   const [busy,       setBusy]      = useState(false);
 
+  // Variants are composed on create only; edits add them from the product row.
+  const [variants, setVariants] = useState<DraftVariant[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  function addVariant() {
+    setVariants((prev) => [...prev, newDraft()]);
+  }
+
+  function patchVariant(key: string, patch: Partial<DraftVariant>) {
+    setVariants((prev) => prev.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+  }
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -151,20 +360,57 @@ function ProductForm({ initial, categories, onSave, onClose }: {
       toast.error("Name and category are required.");
       return;
     }
+
+    if (!initial && variants.length > 0) {
+      if (variants.some((v) => !v.modelId)) {
+        toast.error("Pick a device model for every variant.");
+        return;
+      }
+      const picked = variants.map((v) => v.modelId);
+      if (new Set(picked).size !== picked.length) {
+        toast.error("Each variant must use a different device model.");
+        return;
+      }
+      if (variants.some((v) => !v.price || Number(v.price) <= 0)) {
+        toast.error("Every variant needs a price greater than 0.");
+        return;
+      }
+    }
+
     setBusy(true);
     try {
-      // Match exact backend createProduct / updateProduct shape
-      const payload = {
+      // Shared part of both product payloads
+      const base = {
         name: name.trim(),
         description: desc.trim() || undefined,
         categoryId,
         images,
         isFeatured,
       };
+
       const result = initial
-        ? await adminService.updateProduct(initial.id, payload)
-        : await adminService.createProduct(payload);
-      toast.success(initial ? "Product updated." : "Product created.");
+        ? await adminService.updateProduct(initial.id, base)
+        : variants.length > 0
+          ? // One transaction: product + every variant, or nothing at all.
+            await adminService.createProductWithVariants({
+              ...base,
+              variants: variants.map((v) => ({
+                deviceModelId: v.modelId,
+                price: Number(v.price),
+                comparePrice: v.comparePrice ? Number(v.comparePrice) : undefined,
+                stock: Number(v.stock) || 0,
+                images: v.images,
+              })),
+            })
+          : await adminService.createProduct(base);
+
+      toast.success(
+        initial
+          ? "Product updated."
+          : variants.length > 0
+            ? `Design created with ${variants.length} variant${variants.length > 1 ? "s" : ""}.`
+            : "Product created."
+      );
       onSave(result as unknown as Product);
       onClose();
     } catch (err) {
@@ -266,6 +512,51 @@ function ProductForm({ initial, categories, onSave, onClose }: {
         </p>
       </div>
 
+      {/* Variants — create only: committed with the product in one transaction */}
+      {!initial && (
+        <div className="space-y-3 rounded-xl border bg-muted/20 p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label>Device variants</Label>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                Cut this design for specific phone models. The product and every variant
+                are created in one request — if one fails, nothing is saved.
+              </p>
+            </div>
+            <Button type="button" size="sm" variant="outline"
+              className="shrink-0 gap-1.5" onClick={addVariant}>
+              <Plus className="size-3.5" /> Add model
+            </Button>
+          </div>
+
+          {variants.length === 0 ? (
+            <p className="text-xs italic text-muted-foreground">
+              No variants — you can also add them later by expanding the product row.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {variants.map((v, i) => (
+                <DraftVariantCard
+                  key={v.key}
+                  index={i}
+                  draft={v}
+                  allModels={allModels}
+                  exclude={variants
+                    .filter((x) => x.key !== v.key)
+                    .map((x) => x.modelId)
+                    .filter(Boolean)}
+                  onChange={(patch) => patchVariant(v.key, patch)}
+                  onRemove={() => setVariants((prev) => prev.filter((x) => x.key !== v.key))}
+                />
+              ))}
+              <p className="text-xs text-muted-foreground">
+                SKUs are generated automatically from the design name and phone model.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Featured */}
       <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
         <input type="checkbox" checked={isFeatured} onChange={(e) => setFeatured(e.target.checked)}
@@ -284,103 +575,122 @@ function ProductForm({ initial, categories, onSave, onClose }: {
 // ─── Variant form ─────────────────────────────────────────────────────────────
 // Fields: productId, deviceModelId, sku, price, comparePrice, stock, images[]
 
-function VariantForm({ productId, allModels, onSave, onClose }: {
+function VariantForm({ productId, allModels, variant, onSave, onClose }: {
   productId: string;
   allModels: ApiDeviceModel[];
+  /** Present → edit mode (device model + SKU are fixed). */
+  variant?: ProductVariant;
   onSave: (v: ProductVariant) => void;
   onClose: () => void;
 }) {
-  const [modelSearch,  setModelSearch] = useState("");
-  const [modelId,      setModelId]     = useState("");
-  const [sku,          setSku]         = useState("");
-  const [price,        setPrice]       = useState("");
-  const [comparePrice, setCompare]     = useState("");
-  const [stock,        setStock]       = useState("0");
+  const isEdit = Boolean(variant);
+  const [modelId,      setModelId]     = useState(variant?.deviceModel?.id ?? "");
+  const [sku,          setSku]         = useState(variant?.sku ?? "");
+  const [price,        setPrice]       = useState(variant ? String(Number(variant.price)) : "");
+  const [comparePrice, setCompare]     = useState(
+    variant?.comparePrice != null ? String(Number(variant.comparePrice)) : ""
+  );
+  const [stock,        setStock]       = useState(String(variant?.stock ?? 0));
+  const [images,       setImages]      = useState<string[]>(variant?.images ?? []);
+  const [imageInput,   setImageInput]  = useState("");
+  const [uploading,    setUploading]   = useState(false);
+  const [isActive,     setIsActive]    = useState(variant?.isActive ?? true);
   const [busy,         setBusy]        = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Models with brand info injected (the ApiDeviceModel from our service
-  // may have brand as a nested object since listModels returns brand data)
-  type ModelWithBrand = ApiDeviceModel & { brand?: { id: string; name: string; slug: string } };
-
-  const filteredModels = useMemo(() => {
-    const q = modelSearch.trim().toLowerCase();
-    if (!q) return (allModels as ModelWithBrand[]).slice(0, 30);
-    return (allModels as ModelWithBrand[]).filter((m) =>
-      m.name.toLowerCase().includes(q) ||
-      m.brand?.name.toLowerCase().includes(q)
-    ).slice(0, 20);
-  }, [allModels, modelSearch]);
-
+  // Only used to suggest a SKU — the picker renders the selection itself.
   const selectedModel = (allModels as ModelWithBrand[]).find((m) => m.id === modelId);
 
-  // Auto-generate SKU suggestion
+  // Auto-generate SKU suggestion (new variants only)
   useEffect(() => {
-    if (selectedModel && !sku) {
+    if (!isEdit && selectedModel && !sku) {
       const abbr = selectedModel.slug.toUpperCase().replace(/-/g, "").slice(0, 8);
       setSku(`SKU-${abbr}`);
     }
-  }, [selectedModel, sku]);
+  }, [isEdit, selectedModel, sku]);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const urls = await uploadMultiple(Array.from(files).slice(0, 10), "variants");
+      setImages((prev) => [...prev, ...urls]);
+      toast.success(`${urls.length} image${urls.length > 1 ? "s" : ""} uploaded.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function addImage() {
+    const url = imageInput.trim();
+    if (!url) return;
+    setImages((prev) => [...prev, url]);
+    setImageInput("");
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!modelId || !sku.trim() || !price) {
-      toast.error("Device model, SKU and price are required.");
+    if (!sku.trim() || !price) {
+      toast.error("SKU and price are required.");
+      return;
+    }
+    if (!isEdit && !modelId) {
+      toast.error("Pick a device model.");
       return;
     }
     setBusy(true);
     try {
-      const payload = {
-        productId,
-        deviceModelId: modelId,
-        sku: sku.trim(),
-        price: Number(price),
-        comparePrice: comparePrice ? Number(comparePrice) : undefined,
-        stock: Number(stock) || 0,
-      };
-      const result = await adminService.createVariant(payload);
-      toast.success("Variant added.");
-      onSave(result as unknown as ProductVariant);
+      if (isEdit && variant) {
+        const updated = await adminService.updateVariant(variant.id, {
+          price: Number(price),
+          comparePrice: comparePrice ? Number(comparePrice) : null,
+          stock: Number(stock) || 0,
+          images,
+          isActive,
+        });
+        toast.success("Variant updated.");
+        onSave(updated as unknown as ProductVariant);
+      } else {
+        const created = await adminService.createVariant({
+          productId,
+          deviceModelId: modelId,
+          sku: sku.trim(),
+          price: Number(price),
+          comparePrice: comparePrice ? Number(comparePrice) : undefined,
+          stock: Number(stock) || 0,
+          images,
+        });
+        toast.success("Variant added.");
+        onSave(created as unknown as ProductVariant);
+      }
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add variant.");
+      toast.error(
+        err instanceof Error ? err.message : `Failed to ${isEdit ? "update" : "add"} variant.`
+      );
     } finally { setBusy(false); }
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {/* Device model search */}
+      {/* Device model — picked at creation, fixed afterwards */}
       <div className="space-y-1.5">
         <Label>Device model *</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={modelSearch}
-            onChange={(e) => { setModelSearch(e.target.value); setModelId(""); }}
-            placeholder="Search iPhone 16, Galaxy S26…"
-            className="pl-8"
-          />
-        </div>
-        {/* Dropdown */}
-        {modelSearch.length > 0 && !modelId && (
-          <ul className="max-h-48 overflow-y-auto rounded-xl border bg-card shadow-md">
-            {filteredModels.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-muted-foreground">No models found</li>
-            ) : filteredModels.map((m) => (
-              <li key={m.id}>
-                <button type="button"
-                  onClick={() => { setModelId(m.id); setModelSearch(`${m.brand?.name} ${m.name}`); }}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-primary/5">
-                  <span className="font-medium">{m.name}</span>
-                  <span className="text-xs text-muted-foreground">{m.brand?.name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {selectedModel && (
-          <p className="text-xs font-medium text-primary">
-            ✓ {(selectedModel as ModelWithBrand).brand?.name} {selectedModel.name}
+        {isEdit ? (
+          <p className="rounded-md border border-input bg-muted/40 px-3 py-2.5 text-sm">
+            {variant?.deviceModel
+              ? `${variant.deviceModel.brand?.name ?? ""} ${variant.deviceModel.name}`.trim()
+              : "—"}
           </p>
+        ) : (
+          <ModelPicker
+            allModels={allModels}
+            value={modelId}
+            label=""
+            onChange={(id) => setModelId(id)}
+          />
         )}
       </div>
 
@@ -388,7 +698,13 @@ function VariantForm({ productId, allModels, onSave, onClose }: {
       <div className="space-y-1.5">
         <Label>SKU *</Label>
         <Input value={sku} onChange={(e) => setSku(e.target.value)}
-          placeholder="e.g. NEON-CITY-IP16" className="font-mono" required />
+          placeholder="e.g. NEON-CITY-IP16" className="font-mono" required
+          disabled={isEdit} />
+        {isEdit && (
+          <p className="text-[10px] text-muted-foreground">
+            SKU can&apos;t be changed after creation.
+          </p>
+        )}
       </div>
 
       {/* Price + Compare + Stock */}
@@ -411,10 +727,86 @@ function VariantForm({ productId, allModels, onSave, onClose }: {
         </div>
       </div>
 
+      {/* Variant mockups — the design shown on THIS device model */}
+      <div className="space-y-1.5">
+        <Label>Variant images (mockups)</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2 border-dashed h-11"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <><Loader2 className="size-4 animate-spin" /> Uploading…</>
+          ) : (
+            <><Upload className="size-4" /> Upload mockups (up to 10)</>
+          )}
+        </Button>
+        <div className="flex gap-2">
+          <Input
+            value={imageInput}
+            onChange={(e) => setImageInput(e.target.value)}
+            placeholder="Or paste a URL and press Add"
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())}
+          />
+          <Button type="button" variant="outline" onClick={addImage} className="shrink-0">
+            Add
+          </Button>
+        </div>
+        {images.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {images.map((url, i) => (
+              <div key={i} className="group relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="size-16 rounded-lg border object-cover" />
+                {i === 0 && (
+                  <span className="absolute -bottom-1 left-0 right-0 text-center text-[9px] font-bold text-primary">
+                    PRIMARY
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                  className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Shown on the product page once the customer selects this phone model. First image is primary.
+        </p>
+      </div>
+
+      {isEdit && (
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="size-4 rounded border-input"
+          />
+          Active (visible in the store)
+        </label>
+      )}
+
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={busy || !modelId}>
-          {busy ? "Adding…" : "Add variant"}
+        <Button type="submit" disabled={busy || (!isEdit && !modelId)}>
+          {busy
+            ? (isEdit ? "Saving…" : "Adding…")
+            : (isEdit ? "Save changes" : "Add variant")}
         </Button>
       </div>
     </form>
@@ -447,12 +839,14 @@ function ConfirmDelete({ label, onConfirm, onClose }: {
 
 // ─── Variant sub-table (inline expansion) ────────────────────────────────────
 
-function VariantRows({ product, allModels, onVariantAdded }: {
+function VariantRows({ product, allModels, onVariantAdded, onVariantUpdated }: {
   product: Product;
   allModels: ApiDeviceModel[];
   onVariantAdded: (productId: string, v: ProductVariant) => void;
+  onVariantUpdated: (productId: string, v: ProductVariant) => void;
 }) {
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen,    setAddOpen]    = useState(false);
+  const [editTarget, setEditTarget] = useState<ProductVariant | null>(null);
   const variants = product.variants ?? [];
 
   return (
@@ -471,17 +865,44 @@ function VariantRows({ product, allModels, onVariantAdded }: {
                     <th className="py-2 pl-4 pr-3">Device model</th>
                     <th className="py-2 px-3">Brand</th>
                     <th className="py-2 px-3">SKU</th>
+                    <th className="py-2 px-3">Mockups</th>
                     <th className="py-2 px-3 text-right">Price</th>
                     <th className="py-2 px-3 text-right">Compare</th>
-                    <th className="py-2 pl-3 pr-4 text-right">Stock</th>
+                    <th className="py-2 px-3 text-right">Stock</th>
+                    <th className="py-2 pl-3 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {variants.map((v) => (
                     <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-2 pl-4 pr-3 font-medium">{v.deviceModel?.name ?? "—"}</td>
+                      <td className="py-2 pl-4 pr-3 font-medium">
+                        {v.deviceModel?.name ?? "—"}
+                        {v.isActive === false && (
+                          <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase text-muted-foreground">
+                            Inactive
+                          </span>
+                        )}
+                      </td>
                       <td className="py-2 px-3 text-muted-foreground">{v.deviceModel?.brand?.name ?? "—"}</td>
                       <td className="py-2 px-3 font-mono text-muted-foreground">{v.sku}</td>
+                      <td className="py-2 px-3">
+                        {v.images && v.images.length > 0 ? (
+                          <div className="flex -space-x-2">
+                            {v.images.slice(0, 3).map((url, i) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img key={i} src={url} alt=""
+                                className="size-6 rounded border bg-card object-cover ring-1 ring-background" />
+                            ))}
+                            {v.images.length > 3 && (
+                              <span className="grid size-6 place-items-center rounded border bg-muted text-[9px] font-semibold text-muted-foreground ring-1 ring-background">
+                                +{v.images.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
                       <td className="py-2 px-3 text-right tabular-nums font-semibold">
                         ₹{Number(v.price).toFixed(0)}
                       </td>
@@ -489,7 +910,7 @@ function VariantRows({ product, allModels, onVariantAdded }: {
                         {v.comparePrice ? `₹${Number(v.comparePrice).toFixed(0)}` : "—"}
                       </td>
                       <td className={cn(
-                        "py-2 pl-3 pr-4 text-right tabular-nums font-semibold",
+                        "py-2 px-3 text-right tabular-nums font-semibold",
                         v.stock === 0
                           ? "text-destructive"
                           : v.stock <= 5
@@ -497,6 +918,12 @@ function VariantRows({ product, allModels, onVariantAdded }: {
                             : "text-emerald-700"
                       )}>
                         {v.stock}
+                      </td>
+                      <td className="py-2 pl-3 pr-4 text-right">
+                        <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs"
+                          onClick={() => setEditTarget(v)}>
+                          <Pencil className="size-3" /> Edit
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -523,23 +950,36 @@ function VariantRows({ product, allModels, onVariantAdded }: {
           />
         </Modal>
       )}
+
+      {editTarget && (
+        <Modal title={`Edit variant — ${product.name}`} wide onClose={() => setEditTarget(null)}>
+          <VariantForm
+            productId={product.id}
+            allModels={allModels}
+            variant={editTarget}
+            onSave={(v) => { onVariantUpdated(product.id, v); setEditTarget(null); }}
+            onClose={() => setEditTarget(null)}
+          />
+        </Modal>
+      )}
     </>
   );
 }
 
 // ─── Product row ──────────────────────────────────────────────────────────────
 
-function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded }: {
+function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded, onVariantUpdated }: {
   product: Product;
   allModels: ApiDeviceModel[];
   onEdit: () => void;
   onDelete: () => void;
   onVariantAdded: (productId: string, v: ProductVariant) => void;
+  onVariantUpdated: (productId: string, v: ProductVariant) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const brands   = getBrandNames(product);
   const varCount = product.variants?.length ?? 0;
-  const firstImg = product.images?.[0];
+  const firstImg = primaryImage(product);
 
   return (
     <>
@@ -632,6 +1072,7 @@ function ProductRow({ product, allModels, onEdit, onDelete, onVariantAdded }: {
           product={product}
           allModels={allModels}
           onVariantAdded={onVariantAdded}
+          onVariantUpdated={onVariantUpdated}
         />
       )}
     </>
@@ -660,30 +1101,20 @@ export default function AdminProductsPage() {
     let cancelled = false;
     setLoading(true); setError(null);
 
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
-    const qs   = new URLSearchParams({ page: String(page), limit: "20" });
-
     Promise.all([
-      // Products — shape: { data: { products: [], pagination: {} } }
-      fetch(`${base}/products?${qs}`, { headers: { "Content-Type": "application/json" } })
-        .then((r) => r.json()),
+      // Products — paginated list via the shared service
+      productsService.list({ page, limit: 20 }),
       // Categories for the product form
       adminService.listCategories(),
-      // All device models for the variant form (fetch per brand in parallel)
-      adminService.listBrands()
-        .then((brands) =>
-          Promise.all(brands.map((b) => adminService.listModels(b.slug).catch(() => [])))
-        )
-        .then((nested) => nested.flat()),
+      // All device models for the variant form (type-based sweep, ~4 requests).
+      // Never fetch one request per brand — that trips the API rate limiter.
+      devicesService.getAllModels(),
     ])
-      .then(([json, cats, models]) => {
+      .then(([res, cats, models]) => {
         if (cancelled) return;
-        const inner = json?.data ?? json;
-        const items: Product[] = inner?.products ?? inner?.items ?? (Array.isArray(inner) ? inner : []);
-        const pag   = inner?.pagination ?? {};
-        setProducts(items);
-        setTotalPages(pag.totalPages ?? 1);
-        setTotal(pag.total ?? items.length);
+        setProducts(res.items as unknown as Product[]);
+        setTotalPages(res.pagination.totalPages ?? 1);
+        setTotal(res.pagination.total ?? res.items.length);
         setCategories(Array.isArray(cats) ? cats : []);
         setAllModels(Array.isArray(models) ? models : []);
       })
@@ -706,6 +1137,14 @@ export default function AdminProductsPage() {
   const handleVariantAdded = useCallback((productId: string, v: ProductVariant) => {
     setProducts((prev) => prev.map((p) =>
       p.id === productId ? { ...p, variants: [...(p.variants ?? []), v] } : p
+    ));
+  }, []);
+
+  const handleVariantUpdated = useCallback((productId: string, v: ProductVariant) => {
+    setProducts((prev) => prev.map((p) =>
+      p.id === productId
+        ? { ...p, variants: (p.variants ?? []).map((x) => (x.id === v.id ? v : x)) }
+        : p
     ));
   }, []);
 
@@ -750,7 +1189,7 @@ export default function AdminProductsPage() {
       <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-electric-soft/40 px-4 py-3 text-sm">
         <Package className="mt-0.5 size-4 shrink-0 text-primary" />
         <p className="text-muted-foreground leading-relaxed">
-          <strong className="font-semibold text-foreground">Product</strong> = the skin design artwork (e.g. "Neon City").{" "}
+          <strong className="font-semibold text-foreground">Product</strong> = the skin design artwork (e.g. &ldquo;Neon City&rdquo;).{" "}
           <strong className="font-semibold text-foreground">Variant</strong> = that design cut for a specific phone model, with its own SKU, price and stock.
           Click the <ChevronRight className="inline size-3.5 align-middle" /> to expand variants.
         </p>
@@ -792,6 +1231,7 @@ export default function AdminProductsPage() {
                     onEdit={() => setEditTarget(p)}
                     onDelete={() => setDelTarget(p)}
                     onVariantAdded={handleVariantAdded}
+                    onVariantUpdated={handleVariantUpdated}
                   />
                 ))}
               </tbody>
@@ -817,19 +1257,21 @@ export default function AdminProductsPage() {
 
       {/* Modals */}
       {addOpen && (
-        <Modal title="Add skin design" onClose={() => setAddOpen(false)}>
+        <Modal title="Add skin design" wide onClose={() => setAddOpen(false)}>
           <ProductForm
             categories={categories}
+            allModels={allModels}
             onSave={(p) => { setProducts((prev) => [p, ...prev]); setAddOpen(false); }}
             onClose={() => setAddOpen(false)}
           />
         </Modal>
       )}
       {editTarget && (
-        <Modal title="Edit product" onClose={() => setEditTarget(null)}>
+        <Modal title="Edit product" wide onClose={() => setEditTarget(null)}>
           <ProductForm
             initial={editTarget}
             categories={categories}
+            allModels={allModels}
             onSave={(p) => {
               setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, ...p } : x));
               setEditTarget(null);

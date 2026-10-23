@@ -587,27 +587,27 @@ export default function AdminDevicesPage() {
       .catch(() => { if (!cancelled) setDeviceTypes([]); });
 
     adminService.listBrands()
-      .then((data) => {
+      .then(async (data) => {
         if (cancelled) return;
         setBrands(data);
         const pending: Record<string, boolean> = {};
         data.forEach((b) => { pending[b.slug] = true; });
         setLoadingModels(pending);
 
-        Promise.all(
-          data.map((b) =>
-            adminService.listModels(b.slug)
-              .then((models) => ({ slug: b.slug, models }))
-              .catch(() => ({ slug: b.slug, models: [] as ApiDeviceModel[] }))
-          )
-        ).then((results) => {
-          if (cancelled) return;
-          const map: Record<string, ApiDeviceModel[]> = {};
-          const done: Record<string, boolean> = {};
-          results.forEach(({ slug, models }) => { map[slug] = models; done[slug] = false; });
-          setModelMap(map);
-          setLoadingModels(done);
-        });
+        // One type-based sweep (~4 requests) instead of one request per brand,
+        // which is what was tripping the API rate limiter.
+        const all = await devicesService.getAllModels();
+        if (cancelled) return;
+        const map: Record<string, ApiDeviceModel[]> = {};
+        const done: Record<string, boolean> = {};
+        data.forEach((b) => { map[b.slug] = []; done[b.slug] = false; });
+        for (const m of all) {
+          const slug = m.brand?.slug;
+          if (!slug || !(slug in map)) continue;
+          map[slug].push(m);
+        }
+        setModelMap(map);
+        setLoadingModels(done);
       })
       .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load brands."); })
       .finally(() => { if (!cancelled) setLoadingBrands(false); });

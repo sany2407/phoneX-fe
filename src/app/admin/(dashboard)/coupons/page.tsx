@@ -322,20 +322,20 @@ export default function AdminCouponsPage() {
                     {/* Discount value */}
                     <td className="py-3 px-3 text-right tabular-nums font-medium">
                       {c.discountType === "PERCENTAGE"
-                        ? `${c.discountValue}%`
+                        ? `${Number(c.discountValue)}%`
                         : c.discountType === "FLAT"
-                          ? formatINR(c.discountValue)
+                          ? formatINR(Number(c.discountValue))
                           : "—"}
                     </td>
 
                     {/* Min order */}
                     <td className="py-3 px-3 text-right tabular-nums text-xs text-muted-foreground">
-                      {c.minOrderValue ? formatINR(c.minOrderValue) : "—"}
+                      {c.minOrderValue ? formatINR(Number(c.minOrderValue)) : "—"}
                     </td>
 
                     {/* Max discount */}
                     <td className="py-3 px-3 text-right tabular-nums text-xs text-muted-foreground">
-                      {c.maxDiscount ? formatINR(c.maxDiscount) : "—"}
+                      {c.maxDiscount ? formatINR(Number(c.maxDiscount)) : "—"}
                     </td>
 
                     {/* Usage */}

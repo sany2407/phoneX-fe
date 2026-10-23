@@ -203,7 +203,7 @@ export default function AdminOrdersPage() {
                       {formatDate(new Date(o.createdAt).getTime())}
                     </td>
                     <td className="py-3 px-3 max-w-[140px] truncate text-xs">
-                      {o.shippingAddress?.fullName ?? "—"}
+                      {o.shippingAddress?.name ?? "—"}
                     </td>
                     <td className="py-3 px-3 text-xs text-muted-foreground tabular-nums">
                       {o.items.length}

@@ -58,7 +58,7 @@ export default function AdminReviewsPage() {
     const q = search.trim().toLowerCase();
     if (!q) return reviews;
     return reviews.filter((r) =>
-      r.body.toLowerCase().includes(q) ||
+      (r.body ?? "").toLowerCase().includes(q) ||
       r.title?.toLowerCase().includes(q) ||
       r.user?.name?.toLowerCase().includes(q)
     );
