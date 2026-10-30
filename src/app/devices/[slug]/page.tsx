@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DeviceCard } from "@/components/device/device-card";
+import { DeviceModelGrid } from "@/components/device/device-model-grid";
 import { devicesService } from "@/lib/services/devices.service";
 import type { ApiBrand, ApiDeviceModel, ApiDeviceType } from "@/lib/api-types";
 import { ApiError } from "@/lib/api-client";
@@ -163,29 +163,17 @@ export default async function DeviceSegmentPage({ params }: Props) {
           })}
         </ul>
 
-        <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-          {models.map((model) => {
+        <DeviceModelGrid
+          items={models.flatMap((model) => {
             const brand = model.brand ?? brandById.get(model.brandId);
-            if (!brand) return null;
-            return (
-              <li key={model.id}>
-                <DeviceCard brand={brand} model={model} />
-              </li>
-            );
+            return brand ? [{ model, brand }] : [];
           })}
-        </ul>
+        />
       </div>
     );
   }
 
   const { brand, models } = resolved;
-  const byType = new Map<string, ApiDeviceModel[]>();
-  models.forEach((m) => {
-    const key = m.deviceType?.name ?? "Other";
-    const list = byType.get(key) ?? [];
-    list.push(m);
-    byType.set(key, list);
-  });
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -206,16 +194,10 @@ export default async function DeviceSegmentPage({ params }: Props) {
         </div>
       </header>
 
-      {[...byType.entries()].map(([typeName, list]) => (
-        <section key={typeName} aria-label={typeName} className="mt-10">
-          <h2 className="text-xl font-semibold tracking-tight">{typeName}s</h2>
-          <ul className="mt-5 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {list.map((model) => (
-              <li key={model.id}><DeviceCard brand={brand} model={model} /></li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <DeviceModelGrid
+        groupByType
+        items={models.map((model) => ({ model, brand: model.brand ?? brand }))}
+      />
     </div>
   );
 }
