@@ -126,9 +126,13 @@ export default async function DeviceSegmentPage({ params }: Props) {
 
   if (resolved.kind === "category") {
     const { typeName, models } = resolved;
-    const brands = await devicesService.getBrands().catch(() => []);
+    const [brands, categories] = await Promise.all([
+      devicesService.getBrands().catch(() => []),
+      devicesService
+        .getAvailableCategories({ type: resolved.typeSlug }, { revalidate: 600 })
+        .catch(() => []),
+    ]);
     const brandById = new Map(brands.map((b) => [b.id, b]));
-    const seenBrandIds = [...new Set(models.map((m) => m.brandId))];
     return (
       <div className="container-x py-10 lg:py-14">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
@@ -145,25 +149,8 @@ export default async function DeviceSegmentPage({ params }: Props) {
           </p>
         </header>
 
-        {/* brand shortcuts */}
-        <ul className="mt-8 flex flex-wrap gap-2">
-          {seenBrandIds.map((id) => {
-            const b = brandById.get(id);
-            if (!b) return null;
-            return (
-              <li key={b.id}>
-                <Link
-                  href={`/devices/${b.slug}`}
-                  className="press inline-flex rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:border-transparent hover:shadow-card-hover"
-                >
-                  {b.name}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-
         <DeviceModelGrid
+          categories={categories}
           items={models.flatMap((model) => {
             const brand = model.brand ?? brandById.get(model.brandId);
             return brand ? [{ model, brand }] : [];
@@ -174,6 +161,9 @@ export default async function DeviceSegmentPage({ params }: Props) {
   }
 
   const { brand, models } = resolved;
+  const categories = await devicesService
+    .getAvailableCategories({ brand: brand.slug }, { revalidate: 600 })
+    .catch(() => []);
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -196,6 +186,7 @@ export default async function DeviceSegmentPage({ params }: Props) {
 
       <DeviceModelGrid
         groupByType
+        categories={categories}
         items={models.map((model) => ({ model, brand: model.brand ?? brand }))}
       />
     </div>

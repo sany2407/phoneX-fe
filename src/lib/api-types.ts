@@ -109,6 +109,19 @@ export interface ApiDeviceModel {
   createdAt: string;
 }
 
+/**
+ * The design categories returned by GET /devices/categories — categories that
+ * actually have skins for the requested device scope, with the device models
+ * they cover.
+ */
+export interface ApiAvailableCategory {
+  id: string;
+  name: string;
+  slug: string;
+  /** Device models with at least one active skin in this category. */
+  modelIds: string[];
+}
+
 export interface ApiDeviceType {
   id: string;
   name: string;

@@ -1,5 +1,11 @@
 import { api } from "@/lib/api-client";
-import type { ApiBrand, ApiDeviceModel, ApiDeviceType, ApiVariant } from "@/lib/api-types";
+import type {
+  ApiAvailableCategory,
+  ApiBrand,
+  ApiDeviceModel,
+  ApiDeviceType,
+  ApiVariant,
+} from "@/lib/api-types";
 
 export const devicesService = {
   /** GET /devices/types — Smartphone, Laptop, Tablet… */
@@ -43,6 +49,27 @@ export const devicesService = {
     return api.get<ApiDeviceModel>(
       `/devices/brands/${brandSlug}/models/${modelSlug}`,
       { public: true }
+    );
+  },
+
+  /**
+   * GET /devices/categories?type=|brand=
+   * Design categories that actually have skins for the requested scope, each
+   * with the device models they cover — drives category filtering on the
+   * device pages.
+   */
+  getAvailableCategories(
+    scope: { type?: string; brand?: string },
+    opts?: { revalidate?: number }
+  ): Promise<ApiAvailableCategory[]> {
+    const key = scope.type ? "type" : "brand";
+    const value = scope.type ?? scope.brand;
+    return api.get<ApiAvailableCategory[]>(
+      `/devices/categories?${key}=${encodeURIComponent(value ?? "")}`,
+      {
+        public: true,
+        ...(opts?.revalidate != null ? { next: { revalidate: opts.revalidate } } : {}),
+      }
     );
   },
 
