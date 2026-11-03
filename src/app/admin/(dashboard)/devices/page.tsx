@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
@@ -415,7 +416,7 @@ function BrandCard({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {/* Brand header */}
         <div className="flex w-full items-center gap-3 px-5 py-4">
           {/* Expand toggle */}
@@ -522,7 +523,7 @@ function BrandCard({
             )}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ── Modals ── */}
       {addModel && (
@@ -754,12 +755,12 @@ export default function AdminDevicesPage() {
           {Array.from({ length: PAGE_SIZE }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
         </div>
       ) : pagedBrands.length === 0 ? (
-        <div className="rounded-xl border bg-card px-6 py-12 text-center">
+        <Card className="gap-0 px-6 py-12 text-center text-base">
           <Cpu className="mx-auto mb-3 size-8 text-muted-foreground" />
           <p className="font-semibold">
             {search || typeFilter !== "ALL" ? "No results found" : "No brands yet"}
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="space-y-3">
           {pagedBrands.map((brand, i) => {

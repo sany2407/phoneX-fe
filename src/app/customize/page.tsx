@@ -7,6 +7,7 @@ import {
   UploadIcon as Upload,
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Custom Skin Studio — Design Your Own",
@@ -251,7 +252,7 @@ export default function CustomizePage() {
         </div>
 
         {/* Model request card */}
-        <div className="self-start rounded-2xl border bg-card p-7 shadow-pop">
+        <Card className="self-start gap-0 p-7 text-base shadow-pop">
           <p className="text-label-sm text-primary">Not listed?</p>
           <h2 className="mt-1.5 font-heading text-headline-lg">
             Can&apos;t find your device?
@@ -269,7 +270,7 @@ export default function CustomizePage() {
               Request your model <ArrowRight className="size-4" />
             </Link>
           </Button>
-        </div>
+        </Card>
       </section>
 
     </main>

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 function StockCell({ item }: { item: InventoryItem }) {
   const [value, setValue] = useState(String(item.stock));
@@ -113,7 +114,7 @@ export default function AdminInventoryPage() {
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search product, device, SKU…" className="h-10 pl-9" />
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
         ) : filtered.length === 0 ? (
@@ -160,7 +161,7 @@ export default function AdminInventoryPage() {
             <p className="px-5 py-3 text-xs text-muted-foreground">Showing {filtered.length} of {items.length} variants</p>
           </>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

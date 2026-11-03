@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { uploadSingle } from "@/lib/services/upload.service";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
@@ -452,7 +453,7 @@ export default function AdminCategoriesPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -506,7 +507,7 @@ export default function AdminCategoriesPage() {
             </p>
           </>
         )}
-      </div>
+      </Card>
 
       {/* ── Modals ── */}
       {addOpen && (

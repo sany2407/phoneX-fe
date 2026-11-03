@@ -8,6 +8,7 @@ import {
   Cross2Icon as X,
 } from "@radix-ui/react-icons";
 import { DeviceCard } from "@/components/device/device-card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type {
   ApiAvailableCategory,
@@ -210,7 +211,7 @@ export function DeviceModelGrid({
   return (
     <div>
       {items.length > 0 && (
-        <div className="mt-8 space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+        <Card className="mt-8 gap-0 space-y-4 p-4 text-base sm:p-5">
           {categories && categories.length > 0 && (
             <ChipRow
               label="Design category"
@@ -270,11 +271,11 @@ export function DeviceModelGrid({
               </button>
             )}
           </div>
-        </div>
+        </Card>
       )}
 
       {filtered.length === 0 ? (
-        <div className="mt-8 rounded-xl border bg-card px-4 py-6 sm:px-6">
+        <Card className="mt-8 gap-0 px-4 py-6 text-base sm:px-6">
           <p className="text-sm text-muted-foreground">
             No models match these filters.
           </p>
@@ -287,7 +288,7 @@ export function DeviceModelGrid({
               Clear filters
             </button>
           )}
-        </div>
+        </Card>
       ) : groupByType ? (
         [...groupsList.entries()].map(([typeName, list]) => (
           <section key={typeName} aria-label={typeName} className="mt-10">

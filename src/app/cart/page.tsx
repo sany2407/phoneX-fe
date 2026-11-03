@@ -18,6 +18,7 @@ import { cartTotals, useCart } from "@/lib/stores/cart-store";
 import { formatINR } from "@/lib/utils";
 import type { CartItem } from "@/lib/types";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
+import { Card } from "@/components/ui/card";
 
 function Thumb({ item }: { item: CartItem }) {
   if (item.thumb) {
@@ -175,7 +176,7 @@ export default function CartPage() {
 
           {/* Summary */}
           <aside aria-label="Order summary" className="lg:sticky lg:top-32 lg:self-start">
-            <div className="rounded-xl border bg-card p-6">
+            <Card className="gap-0 p-6 text-base">
               <h2 className="font-heading font-semibold">Summary</h2>
               <dl className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
@@ -205,7 +206,7 @@ export default function CartPage() {
               >
                 <Heart className="size-3.5" /> or keep browsing
               </Link>
-            </div>
+            </Card>
           </aside>
         </div>
       )}

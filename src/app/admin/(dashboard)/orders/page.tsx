@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatINR, formatDate, orderNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -174,7 +175,7 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
         ) : orders.length === 0 ? (
@@ -258,7 +259,7 @@ export default function AdminOrdersPage() {
             </div>
           </>
         )}
-      </div>
+      </Card>
 
       {editOrder && (
         <StatusModal order={editOrder} onUpdated={handleUpdated} onClose={() => setEditOrder(null)} />

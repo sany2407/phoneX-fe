@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ─── local types matching actual backend schema ───────────────────────────────
 
@@ -239,7 +240,7 @@ function DraftVariantCard({ index, draft, allModels, exclude, onChange, onRemove
   }
 
   return (
-    <div className="space-y-3 rounded-xl border bg-card p-3">
+    <Card className="gap-0 space-y-3 p-3 text-base">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Variant {index + 1}
@@ -304,7 +305,7 @@ function DraftVariantCard({ index, draft, allModels, exclude, onChange, onRemove
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -1207,7 +1208,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
@@ -1264,7 +1265,7 @@ export default function AdminProductsPage() {
             </div>
           </>
         )}
-      </div>
+      </Card>
 
       {/* Modals */}
       {addOpen && (

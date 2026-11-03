@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ─── Sales bar chart ──────────────────────────────────────────────────────────
 
@@ -23,7 +24,7 @@ function SalesChart({ data, loading }: { data: SalesDataPoint[]; loading: boolea
   const orders = data.reduce((s, d) => s + d.orders, 0);
 
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <Card className="gap-0 p-5 text-base">
       <div className="mb-2 flex items-center justify-between">
         <div>
           <h2 className="font-semibold">Sales (last 14 days)</h2>
@@ -63,7 +64,7 @@ function SalesChart({ data, loading }: { data: SalesDataPoint[]; loading: boolea
           </div>
         </>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -74,7 +75,7 @@ function CustomerChart({ data, loading }: { data: CustomerSignupDataPoint[]; loa
   const total = data.reduce((s, d) => s + d.count, 0);
 
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <Card className="gap-0 p-5 text-base">
       <div className="mb-2 flex items-center justify-between">
         <div>
           <h2 className="font-semibold">New customers</h2>
@@ -107,7 +108,7 @@ function CustomerChart({ data, loading }: { data: CustomerSignupDataPoint[]; loa
           })}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -115,7 +116,7 @@ function CustomerChart({ data, loading }: { data: CustomerSignupDataPoint[]; loa
 
 function TopProductsCard({ data, loading }: { data: TopProduct[]; loading: boolean }) {
   return (
-    <div className="rounded-xl border bg-card">
+    <Card className="gap-0 py-0 text-base">
       <div className="flex items-center justify-between px-5 py-4">
         <div>
           <h2 className="font-semibold">Top products</h2>
@@ -142,7 +143,7 @@ function TopProductsCard({ data, loading }: { data: TopProduct[]; loading: boole
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   );
 }
 

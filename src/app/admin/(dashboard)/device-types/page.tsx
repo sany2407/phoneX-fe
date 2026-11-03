@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   smartphone: Smartphone,
@@ -201,7 +202,7 @@ export default function AdminDeviceTypesPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
         ) : filtered.length === 0 ? (
@@ -285,7 +286,7 @@ export default function AdminDeviceTypesPage() {
             <p className="px-5 py-3 text-xs text-muted-foreground">Showing {filtered.length} of {types.length} types</p>
           </>
         )}
-      </div>
+      </Card>
 
       {/* ── Modals ── */}
       {addOpen && (

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 const ROLE_CHIP: Record<string, string> = {
   CUSTOMER:    "bg-muted text-muted-foreground",
@@ -98,7 +99,7 @@ export default function AdminUsersPage() {
           placeholder="Search name or email…" className="h-10 pl-9" />
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
@@ -181,7 +182,7 @@ export default function AdminUsersPage() {
             </div>
           </>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

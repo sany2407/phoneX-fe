@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 
 // ---------------------------------------------------------------------------
 // Stat card
@@ -39,7 +40,7 @@ interface StatCardProps {
 
 function StatCard({ label, value, sub, icon: Icon, trend, loading }: StatCardProps) {
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <Card className="gap-0 p-5 text-base">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm text-muted-foreground">{label}</p>
@@ -67,7 +68,7 @@ function StatCard({ label, value, sub, icon: Icon, trend, loading }: StatCardPro
           <Icon className="size-5" />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -85,7 +86,7 @@ function SalesChart({
   const max = data.length ? Math.max(...data.map((d) => d.revenue), 1) : 1;
 
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <Card className="gap-0 p-5 text-base">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="font-semibold">Revenue (last 14 days)</h2>
@@ -161,7 +162,7 @@ function SalesChart({
           </span>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -202,7 +203,7 @@ function OrderStatusChart({
   const gradient = `conic-gradient(${stops.join(", ")})`;
 
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <Card className="gap-0 p-5 text-base">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="font-semibold">Order status</h2>
@@ -274,7 +275,7 @@ function OrderStatusChart({
           </ul>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -290,7 +291,7 @@ function TopProductsTable({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-xl border bg-card">
+    <Card className="gap-0 py-0 text-base">
       <div className="flex items-center justify-between px-5 py-4">
         <div>
           <h2 className="font-semibold">Top products</h2>
@@ -332,7 +333,7 @@ function TopProductsTable({
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -359,7 +360,7 @@ function RecentOrdersTable({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-xl border bg-card">
+    <Card className="gap-0 py-0 text-base">
       <div className="flex items-center justify-between px-5 py-4">
         <div>
           <h2 className="font-semibold">Recent orders</h2>
@@ -440,7 +441,7 @@ function RecentOrdersTable({
           </table>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 

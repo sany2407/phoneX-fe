@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 function StarRow({ rating }: { rating: number }) {
   return (
@@ -99,7 +100,7 @@ export default function AdminReviewsPage() {
           placeholder="Search reviews…" className="h-10 pl-9" />
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
@@ -153,7 +154,7 @@ export default function AdminReviewsPage() {
             </p>
           </>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

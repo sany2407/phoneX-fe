@@ -17,6 +17,7 @@ import { useHydrated } from "@/lib/hooks/use-hydrated";
 import { useOrders } from "@/lib/stores/orders-store";
 import { ORDER_STATUSES } from "@/lib/types";
 import { formatDate, formatINR, orderNumber } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 export function OrderDetailClient() {
   const { id } = useParams<{ id: string }>();
@@ -190,7 +191,7 @@ export function OrderDetailClient() {
 
         {/* Summary + address */}
         <aside className="space-y-6">
-          <div className="rounded-xl border bg-card p-6">
+          <Card className="gap-0 p-6 text-base">
             <h2 className="font-heading font-semibold">Payment summary</h2>
             <dl className="mt-4 space-y-2.5 text-sm">
               <div className="flex justify-between">
@@ -215,8 +216,8 @@ export function OrderDetailClient() {
                 <dd className="tabular-nums">{formatINR(order.total)}</dd>
               </div>
             </dl>
-          </div>
-          <div className="rounded-xl border bg-card p-6">
+          </Card>
+          <Card className="gap-0 p-6 text-base">
             <h2 className="font-heading font-semibold">Delivery address</h2>
             <address className="mt-3 not-italic text-sm leading-6 text-muted-foreground">
               <strong className="block text-foreground">{order.customer.name}</strong>
@@ -226,7 +227,7 @@ export function OrderDetailClient() {
               <br />
               {order.customer.phone}
             </address>
-          </div>
+          </Card>
         </aside>
       </div>
     </div>

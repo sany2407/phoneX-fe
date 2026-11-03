@@ -21,6 +21,7 @@ import { paymentsService } from "@/lib/services/payments.service";
 import { toFrontendOrder } from "@/lib/stores/orders-store";
 import { ApiError } from "@/lib/api-client";
 import { formatINR, orderNumber } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ---------------------------------------------------------------------------
 // Razorpay script loader
@@ -561,7 +562,7 @@ export default function CheckoutPage() {
           aria-label="Order summary"
           className="lg:sticky lg:top-32 lg:self-start"
         >
-          <div className="rounded-xl border bg-card p-6">
+          <Card className="gap-0 p-6 text-base">
             <h2 className="font-heading font-semibold">Order summary</h2>
 
             <ul className="mt-4 max-h-56 space-y-3 overflow-y-auto pr-1">
@@ -661,7 +662,7 @@ export default function CheckoutPage() {
               By placing this order you agree to our terms. Custom designs are
               printed just for you.
             </p>
-          </div>
+          </Card>
         </aside>
       </form>
     </div>

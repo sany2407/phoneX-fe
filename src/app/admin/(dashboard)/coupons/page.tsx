@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatINR } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -271,7 +272,7 @@ export default function AdminCouponsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Card className="overflow-hidden gap-0 py-0 text-base shadow-sm">
         {loading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -383,7 +384,7 @@ export default function AdminCouponsPage() {
             </p>
           </>
         )}
-      </div>
+      </Card>
 
       {addOpen && (
         <Modal title="Add coupon" onClose={() => setAddOpen(false)}>
