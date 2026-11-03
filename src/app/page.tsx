@@ -116,7 +116,7 @@ export default async function HomePage() {
 
         <ScrollReveal threshold={0.08}>
           {liveModels.length > 0 ? (
-            <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3">
+            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
               {liveModels.map((model, i) => {
                 const brand = model.brand;
                 if (!brand) return null;

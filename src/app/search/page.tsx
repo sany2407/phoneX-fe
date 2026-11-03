@@ -104,7 +104,7 @@ function Results() {
       ) : (
         <div className="mt-10 space-y-14">
           <Group title="Devices" count={matchedModels.length} hidden={matchedModels.length === 0}>
-            <ul className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
               {matchedModels.map((m) => {
                 const brand = brands.find((b) => b.id === m.brandId);
                 if (!brand) return null;
@@ -129,7 +129,7 @@ function Results() {
           </Group>
 
           <Group title="Skins" count={skins?.length ?? 0} hidden={!skins || skins.length === 0}>
-            <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3 lg:grid-cols-4">
               {(skins ?? []).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

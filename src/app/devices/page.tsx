@@ -150,7 +150,7 @@ export default async function DevicesPage() {
             </ScrollReveal>
 
             <ScrollReveal threshold={0.05}>
-              <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+              <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
                 {models.slice(0, 8).map((model, i) => {
                   const brand = model.brand ?? brandById.get(model.brandId);
                   if (!brand) return null;

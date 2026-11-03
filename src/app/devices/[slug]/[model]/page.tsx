@@ -113,7 +113,7 @@ export default async function DeviceModelPage({ params }: Props) {
           <h2 id="related-devices-heading" className="text-headline-lg">
             You may also like
           </h2>
-          <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
+          <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4">
             {related.map((m) => {
               const rb = m.brand ?? (m.brandId === brand.id ? brand : undefined);
               if (!rb) return null;
