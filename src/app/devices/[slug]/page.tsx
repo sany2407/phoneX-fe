@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DeviceModelGrid } from "@/components/device/device-model-grid";
+import { DeviceCollectionGrid, type DeviceLineupItem } from "@/components/device/device-collection-grid";
 import { BrandLogo } from "@/components/device/brand-logo";
 import { devicesService } from "@/lib/services/devices.service";
-import type { ApiBrand, ApiDeviceModel, ApiDeviceType } from "@/lib/api-types";
+import type {
+  ApiAvailableCategory,
+  ApiBrand,
+  ApiDeviceModel,
+  ApiDeviceType,
+} from "@/lib/api-types";
 import { ApiError } from "@/lib/api-client";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -72,6 +77,28 @@ async function resolveSegment(slug: string): Promise<Resolution | null> {
 }
 
 /**
+ * Collections are fetched separately from the device lineup, so a failure
+ * there must not read as "this brand has no collections".
+ */
+function CollectionSection({
+  categories,
+  items,
+}: {
+  categories: ApiAvailableCategory[] | null;
+  items: DeviceLineupItem[];
+}) {
+  if (categories === null) {
+    return (
+      <div className="mt-8 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-muted-foreground">
+        We couldn&apos;t load the skin collections just now. Please refresh in a
+        moment.
+      </div>
+    );
+  }
+  return <DeviceCollectionGrid categories={categories} items={items} />;
+}
+
+/**
  * Rendered on demand rather than prerendered — same reason as
  * `devices/[slug]/[model]/page.tsx`. Prerendering every brand and type page
  * costs ~130 API calls per build against a shared 200 req / 15 min backend
@@ -91,14 +118,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!resolved || resolved.kind === "failed") return {};
   if (resolved.kind === "category") {
     return {
-      title: `${resolved.typeName} Skins — Skins by Model`,
-      description: `Browse precision-cut ${resolved.typeName.toLowerCase()} skins by brand and model. Find your exact device.`,
+      title: `${resolved.typeName} Skins — Shop by Collection`,
+      description: `Browse precision-cut ${resolved.typeName.toLowerCase()} skin collections, filtered by brand. Find a design you love for your exact device.`,
       alternates: { canonical: `/devices/${slug}` },
     };
   }
   return {
-    title: `${resolved.brand.name} Skins — Phones & Laptops`,
-    description: `${resolved.brand.name} skins cut to the millimetre. Browse every supported ${resolved.brand.name} model.`,
+    title: `${resolved.brand.name} Skins & Wraps — Collections`,
+    description: `Shop ${resolved.brand.name} skin collections cut to the millimetre for every supported ${resolved.brand.name} model.`,
     alternates: { canonical: `/devices/${slug}` },
   };
 }
@@ -131,7 +158,7 @@ export default async function DeviceSegmentPage({ params }: Props) {
       devicesService.getBrands().catch(() => []),
       devicesService
         .getAvailableCategories({ type: resolved.typeSlug }, { revalidate: 600 })
-        .catch(() => []),
+        .catch(() => null),
     ]);
     const brandById = new Map(brands.map((b) => [b.id, b]));
     return (
@@ -146,11 +173,18 @@ export default async function DeviceSegmentPage({ params }: Props) {
         <header className="mt-4">
           <h1 className="text-headline-lg">{typeName} Skins &amp; Wraps</h1>
           <p className="mt-2 text-muted-foreground">
-            {models.length} models · pick yours to see only compatible skins.
+            Cut for {models.length} {models.length === 1 ? "model" : "models"}
+            {categories !== null && categories.length > 0 && (
+              <>
+                {" "}· {categories.length}{" "}
+                {categories.length === 1 ? "skin collection" : "skin collections"}
+              </>
+            )}
+            .
           </p>
         </header>
 
-        <DeviceModelGrid
+        <CollectionSection
           categories={categories}
           items={models.flatMap((model) => {
             const brand = model.brand ?? brandById.get(model.brandId);
@@ -164,7 +198,7 @@ export default async function DeviceSegmentPage({ params }: Props) {
   const { brand, models } = resolved;
   const categories = await devicesService
     .getAvailableCategories({ brand: brand.slug }, { revalidate: 600 })
-    .catch(() => []);
+    .catch(() => null);
 
   return (
     <div className="container-x py-10 lg:py-14">
@@ -189,14 +223,20 @@ export default async function DeviceSegmentPage({ params }: Props) {
           <div>
             <h1 className="text-headline-lg">{brand.name} Skins &amp; Wraps</h1>
             <p className="mt-2 text-muted-foreground">
-              {models.length} {models.length === 1 ? "model" : "models"}
+              Cut for {models.length} {models.length === 1 ? "model" : "models"}
+              {categories !== null && categories.length > 0 && (
+                <>
+                  {" "}· {categories.length}{" "}
+                  {categories.length === 1 ? "skin collection" : "skin collections"}
+                </>
+              )}
+              .
             </p>
           </div>
         </div>
       </header>
 
-      <DeviceModelGrid
-        groupByType
+      <CollectionSection
         categories={categories}
         items={models.map((model) => ({ model, brand: model.brand ?? brand }))}
       />

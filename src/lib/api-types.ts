@@ -119,6 +119,10 @@ export interface ApiAvailableCategory {
   id: string;
   name: string;
   slug: string;
+  /** Collection blurb, shown under the cover on the device pages. */
+  description?: string | null;
+  /** Cloudinary cover image for the collection. */
+  imageUrl?: string | null;
   /** Device models with at least one active skin in this category. */
   modelIds: string[];
 }
