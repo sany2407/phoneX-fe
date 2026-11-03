@@ -209,6 +209,63 @@ export async function apiRequest<T = unknown>(
 }
 
 // ---------------------------------------------------------------------------
+// Multipart upload
+// ---------------------------------------------------------------------------
+
+/**
+ * POST a `FormData` body with the same auth and transparent refresh as
+ * `apiRequest`.
+ *
+ * File uploads can't use `apiRequest` (the browser must set the multipart
+ * boundary), but they still need the 401 → refresh → retry cycle. Without it,
+ * an expired access token makes uploads fail with "expired or invalid token"
+ * while every other admin request keeps working.
+ */
+export async function apiUploadForm<T = unknown>(
+  path: string,
+  form: FormData
+): Promise<T> {
+  const url = `${BASE_URL}${path}`;
+
+  const execute = (token: string | null): Promise<Response> =>
+    fetch(url, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+
+  let token = tokenStore.getAccess();
+  let res = await execute(token);
+
+  if (res.status === 401) {
+    try {
+      token = await refreshAccessToken();
+      res = await execute(token);
+    } catch {
+      tokenStore.clear();
+      throw new ApiError(401, "UNAUTHENTICATED", "Session expired. Please sign in again.");
+    }
+  }
+
+  let json: Record<string, unknown> = {};
+  const ct = res.headers.get("content-type") ?? "";
+  if (ct.includes("application/json")) {
+    json = await res.json();
+  }
+
+  if (!res.ok) {
+    const message =
+      (json.message as string) ||
+      (json.error as string) ||
+      `Upload failed (${res.status})`;
+    const code = (json.code as string) || String(res.status);
+    throw new ApiError(res.status, code, message);
+  }
+
+  return (json.data ?? json) as T;
+}
+
+// ---------------------------------------------------------------------------
 // Convenience helpers
 // ---------------------------------------------------------------------------
 

@@ -5,13 +5,12 @@
  *   POST /upload/single?folder=products    — one file, field: "image"
  *   POST /upload/multiple?folder=products  — up to 10 files, field: "images"
  *
- * Both require a valid admin Bearer token.
+ * Both require a valid admin Bearer token. Requests go through
+ * `apiUploadForm`, which refreshes an expired access token once and retries.
  * Response shape: { success: true, data: { url, publicId } }
- *                 (multiple returns { data: { urls: string[], publicIds: string[] } })
+ *                 (multiple returns { data: { urls: string[], count: number } })
  */
-import { tokenStore } from "@/lib/api-client";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+import { apiUploadForm } from "@/lib/api-client";
 
 export type UploadFolder =
   | "products"
@@ -30,22 +29,12 @@ export async function uploadSingle(
   const form = new FormData();
   form.append("image", file);
 
-  const res = await fetch(`${BASE_URL}/upload/single?folder=${folder}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${tokenStore.getAccess() ?? ""}`,
-    },
-    body: form,
-  });
+  const data = await apiUploadForm<{ url?: string }>(
+    `/upload/single?folder=${folder}`,
+    form
+  );
 
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      (json.message as string) || `Upload failed (${res.status})`
-    );
-  }
-
-  const url: string = json.data?.url ?? json.url;
+  const url = data?.url;
   if (!url) throw new Error("Upload succeeded but no URL was returned.");
   return url;
 }
@@ -62,28 +51,13 @@ export async function uploadMultiple(
   const form = new FormData();
   files.forEach((f) => form.append("images", f));
 
-  const res = await fetch(`${BASE_URL}/upload/multiple?folder=${folder}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${tokenStore.getAccess() ?? ""}`,
-    },
-    body: form,
-  });
+  const data = await apiUploadForm<{
+    urls?: string[];
+    url?: string;
+  }>(`/upload/multiple?folder=${folder}`, form);
 
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      (json.message as string) || `Upload failed (${res.status})`
-    );
-  }
+  if (Array.isArray(data?.urls)) return data.urls;
+  if (data?.url) return [data.url];
 
-  // Server may return { data: { urls: [] } } or { data: [{ url }] }
-  const data = json.data;
-  if (Array.isArray(data?.urls)) return data.urls as string[];
-  if (Array.isArray(data))
-    return (data as { url: string }[]).map((d) => d.url);
-
-  // Fallback: single-file response wrapped in array
-  if (data?.url) return [data.url as string];
   throw new Error("Upload succeeded but no URLs were returned.");
 }
