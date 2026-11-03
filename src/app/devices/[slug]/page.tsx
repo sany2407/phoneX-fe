@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeviceModelGrid } from "@/components/device/device-model-grid";
+import { BrandLogo } from "@/components/device/brand-logo";
 import { devicesService } from "@/lib/services/devices.service";
 import type { ApiBrand, ApiDeviceModel, ApiDeviceType } from "@/lib/api-types";
 import { ApiError } from "@/lib/api-client";
@@ -176,11 +177,21 @@ export default async function DeviceSegmentPage({ params }: Props) {
       </nav>
 
       <header className="mt-4 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-headline-lg">{brand.name} Skins &amp; Wraps</h1>
-          <p className="mt-2 text-muted-foreground">
-            {models.length} {models.length === 1 ? "model" : "models"}
-          </p>
+        <div className="flex items-center gap-4">
+          {brand.logoUrl && (
+            <BrandLogo
+              name={brand.name}
+              src={brand.logoUrl}
+              className="size-14 rounded-2xl bg-white ring-1 ring-black/5"
+              imageClassName="p-2"
+            />
+          )}
+          <div>
+            <h1 className="text-headline-lg">{brand.name} Skins &amp; Wraps</h1>
+            <p className="mt-2 text-muted-foreground">
+              {models.length} {models.length === 1 ? "model" : "models"}
+            </p>
+          </div>
         </div>
       </header>
 

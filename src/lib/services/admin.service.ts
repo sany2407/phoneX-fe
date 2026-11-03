@@ -89,8 +89,10 @@ export interface UpdateVariantPayload {
 
 export interface CreateBrandPayload {
   name: string;
-  slug: string;
-  logo?: string;
+  /** Optional custom slug — generated from the name when omitted. */
+  slug?: string;
+  /** Cloudinary URL from POST /upload/single?folder=brands. `null` clears it. */
+  logoUrl?: string | null;
 }
 
 export type UpdateBrandPayload = Partial<CreateBrandPayload>;
@@ -103,13 +105,14 @@ export interface CreateDeviceModelPayload {
   brandId: string;
   deviceTypeId: string;
   name: string;
-  imageUrl?: string;
+  /** Cloudinary URL from POST /upload/single?folder=models. `null` clears it. */
+  imageUrl?: string | null;
 }
 
 export interface UpdateDeviceModelPayload {
   name?: string;
   deviceTypeId?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   isActive?: boolean;
 }
 

@@ -31,6 +31,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { BrandLogo } from "@/components/device/brand-logo";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
@@ -113,7 +115,7 @@ function BrandForm({
 }) {
   const [name, setName]   = useState(initial?.name ?? "");
   const [slug, setSlug]   = useState(initial?.slug ?? "");
-  const [logo, setLogo]   = useState(initial?.logo ?? "");
+  const [logoUrl, setLogoUrl] = useState(initial?.logoUrl ?? "");
   const [busy, setBusy]   = useState(false);
 
   // Auto-generate slug from name
@@ -124,16 +126,24 @@ function BrandForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !slug.trim()) { toast.error("Name and slug are required."); return; }
+    if (!name.trim()) { toast.error("Brand name is required."); return; }
     setBusy(true);
     try {
       let result: ApiBrand;
       if (initial) {
-        const payload: UpdateBrandPayload = { name: name.trim(), slug: slug.trim(), logo: logo.trim() || undefined };
+        const payload: UpdateBrandPayload = {
+          name: name.trim(),
+          slug: slug.trim() || undefined,
+          logoUrl: logoUrl.trim() || null,
+        };
         result = await adminService.updateBrand(initial.id, payload);
         toast.success("Brand updated.");
       } else {
-        const payload: CreateBrandPayload = { name: name.trim(), slug: slug.trim(), logo: logo.trim() || undefined };
+        const payload: CreateBrandPayload = {
+          name: name.trim(),
+          slug: slug.trim() || undefined,
+          logoUrl: logoUrl.trim() || null,
+        };
         result = await adminService.createBrand(payload);
         toast.success("Brand created.");
       }
@@ -154,12 +164,17 @@ function BrandForm({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="b-slug">Slug</Label>
-        <Input id="b-slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="e.g. apple" required />
+        <Input id="b-slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="e.g. apple" />
+        <p className="text-xs text-muted-foreground">Auto-generated from the name — edit to override.</p>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="b-logo">Logo URL (optional)</Label>
-        <Input id="b-logo" value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…" />
-      </div>
+      <ImageUploadField
+        id="b-logo"
+        label="Brand logo (optional)"
+        value={logoUrl}
+        onChange={setLogoUrl}
+        folder="brands"
+        hint="Square PNG or WebP works best — max 5 MB. Stored on Cloudinary."
+      />
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         <Button type="submit" disabled={busy}>{busy ? "Saving…" : initial ? "Update" : "Create"}</Button>
@@ -197,7 +212,7 @@ function ModelForm({
         const payload: UpdateDeviceModelPayload = {
           name: name.trim(),
           deviceTypeId,
-          imageUrl: imageUrl.trim() || undefined,
+          imageUrl: imageUrl.trim() || null,
         };
         result = await adminService.updateDeviceModel(initial.id, payload);
         toast.success("Model updated.");
@@ -206,7 +221,7 @@ function ModelForm({
           brandId,
           deviceTypeId,
           name: name.trim(),
-          imageUrl: imageUrl.trim() || undefined,
+          imageUrl: imageUrl.trim() || null,
         };
         result = await adminService.createDeviceModel(payload);
         toast.success("Model created.");
@@ -242,10 +257,14 @@ function ModelForm({
           ))}
         </select>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="m-image">Image URL (optional)</Label>
-        <Input id="m-image" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" />
-      </div>
+      <ImageUploadField
+        id="m-image"
+        label="Device photo (optional)"
+        value={imageUrl}
+        onChange={setImageUrl}
+        folder="models"
+        hint="Shown on the device card. Without one we show the brand monogram."
+      />
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         <Button type="submit" disabled={busy}>{busy ? "Saving…" : initial ? "Update" : "Create"}</Button>
@@ -348,7 +367,18 @@ function ModelRow({
           {modelTypeName(model)}
         </span>
       </td>
-      <td className="py-3 px-3 font-medium text-sm">{model.name}</td>
+      <td className="py-3 px-3">
+        <div className="flex items-center gap-2">
+          {model.imageUrl && (
+            <span className="relative grid size-7 shrink-0 place-items-center overflow-hidden rounded-md bg-muted/40">
+              {/* Cloudinary URL — plain <img> avoids next.config allowlists. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={model.imageUrl} alt="" className="size-full object-contain p-0.5" />
+            </span>
+          )}
+          <span className="font-medium text-sm">{model.name}</span>
+        </div>
+      </td>
       <td className="py-3 px-3 font-mono text-xs text-muted-foreground">{model.slug}</td>
       <td className="py-3 pl-3 pr-4">
         <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold",
@@ -426,9 +456,17 @@ function BrandCard({
             className="flex flex-1 items-center gap-3 text-left"
             aria-expanded={open}
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 font-heading text-sm font-bold text-primary">
-              {brand.name.slice(0, 2).toUpperCase()}
-            </span>
+            <BrandLogo
+              name={brand.name}
+              src={brand.logoUrl}
+              className={cn(
+                "size-9 rounded-lg",
+                brand.logoUrl
+                  ? "bg-white ring-1 ring-black/5"
+                  : "bg-primary/10 font-heading text-sm font-bold text-primary"
+              )}
+              imageClassName="p-1"
+            />
             <div className="min-w-0 flex-1">
               <p className="font-semibold tracking-tight">{brand.name}</p>
               <p className="text-xs text-muted-foreground font-mono">{brand.slug}</p>

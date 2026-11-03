@@ -2,27 +2,15 @@ import Link from "next/link";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
 import { DevicePhoto } from "@/components/device/device-photo";
+import { BrandLogo } from "@/components/device/brand-logo";
 import { cn } from "@/lib/utils";
-
-/** Two letters that identify a brand without needing artwork. */
-function monogram(name: string) {
-  const words = name
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (words.length === 0) return "?";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return `${words[0][0]}${words[1][0]}`.toUpperCase();
-}
 
 /**
  * Device entry for catalogue grids.
  *
- * Most device models have no photo, so the card leads with a brand monogram
- * instead of an empty image panel. Models that do have a photo keep a compact
- * thumbnail in its place.
+ * Leads with the brand logo (or its monogram when no logo has been uploaded)
+ * instead of an empty image panel, since device models rarely have photos.
+ * Models that do have a photo show a small thumbnail in its place.
  */
 export function DeviceCard({
   brand,
@@ -51,25 +39,31 @@ export function DeviceCard({
           "group-hover:-translate-y-0.5 group-hover:border-transparent group-hover:shadow-card-hover"
         )}
       >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg sm:size-10",
-            "bg-primary/[0.06] text-[11px] font-semibold tracking-wide text-primary sm:text-[13px]",
-            "ring-1 ring-primary/10 ring-inset"
-          )}
-        >
-          {model.imageUrl ? (
+        {brand.logoUrl ? (
+          <BrandLogo
+            name={brand.name}
+            src={brand.logoUrl}
+            className="size-8 rounded-lg bg-white ring-1 ring-black/5 sm:size-10"
+            imageClassName="p-1"
+          />
+        ) : model.imageUrl ? (
+          <span
+            aria-hidden="true"
+            className="relative size-8 shrink-0 overflow-hidden rounded-lg bg-muted/40 ring-1 ring-black/5 sm:size-10"
+          >
             <DevicePhoto
               src={model.imageUrl}
               alt=""
               sizes="(min-width: 640px) 40px, 32px"
-              className="size-full object-cover"
+              className="p-1"
             />
-          ) : (
-            monogram(brand.name)
-          )}
-        </span>
+          </span>
+        ) : (
+          <BrandLogo
+            name={brand.name}
+            className="size-8 rounded-lg bg-primary/[0.06] text-[11px] font-semibold tracking-wide text-primary ring-1 ring-primary/10 ring-inset sm:size-10 sm:text-[13px]"
+          />
+        )}
 
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">

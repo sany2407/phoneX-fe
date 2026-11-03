@@ -86,7 +86,8 @@ export interface ApiBrand {
   id: string;
   name: string;
   slug: string;
-  logo?: string;
+  /** Cloudinary URL for the brand logo, or null when none has been uploaded. */
+  logoUrl?: string | null;
   isActive: boolean;
   createdAt: string;
   models?: ApiDeviceModel[];
