@@ -16,6 +16,7 @@ import { uploadSingle, type UploadFolder } from "@/lib/services/upload.service";
 import { cn } from "@/lib/utils";
 
 const MAX_BYTES = 5 * 1024 * 1024;
+const ACCEPTED = ["image/png", "image/jpeg", "image/webp"];
 
 /**
  * Image picker that uploads straight to Cloudinary through the API
@@ -49,8 +50,8 @@ export function ImageUploadField({
     const file = files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Pick an image file (PNG, JPG or WebP).");
+    if (!ACCEPTED.includes(file.type)) {
+      toast.error("Use a PNG, JPG or WebP image.");
       return;
     }
     if (file.size > MAX_BYTES) {
@@ -151,7 +152,7 @@ export function ImageUploadField({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp"
         className="sr-only"
         tabIndex={-1}
         onChange={(e) => void handleFiles(e.target.files)}

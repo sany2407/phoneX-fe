@@ -173,7 +173,7 @@ function BrandForm({
         value={logoUrl}
         onChange={setLogoUrl}
         folder="brands"
-        hint="Square PNG or WebP works best — max 5 MB. Stored on Cloudinary."
+        hint="Square PNG, JPG or WebP works best — max 5 MB. Stored on Cloudinary."
       />
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
