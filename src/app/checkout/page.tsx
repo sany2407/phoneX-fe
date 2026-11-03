@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, ShieldCheck } from "lucide-react";
+import { LockClosedIcon as Lock, LockClosedIcon as ShieldCheck } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

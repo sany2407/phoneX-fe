@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Crown, Layers, Smartphone, Sparkles } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  StarFilledIcon as Crown,
+  LayersIcon as Layers,
+  MobileIcon as Smartphone,
+  MagicWandIcon as Sparkles,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { PhoneOrbit } from "@/components/home/phone-orbit";
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { LayersIcon as Layers } from "@radix-ui/react-icons";
 import { productsService } from "@/lib/services/products.service";
 import { categoriesService } from "@/lib/services/categories.service";
 import type { ApiCategory } from "@/lib/api-types";

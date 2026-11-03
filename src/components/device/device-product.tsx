@@ -4,18 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  ImageOff,
-  Minus,
-  Plus,
-  ShieldCheck,
-  ShoppingBag,
-  Tag,
-  Truck,
-  Zap,
-} from "lucide-react";
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  DownloadIcon as Download,
+  ImageIcon as ImageOff,
+  MinusIcon as Minus,
+  PlusIcon as Plus,
+  LockClosedIcon as ShieldCheck,
+  BoxIcon as ShoppingBag,
+  ValueIcon as Tag,
+  PaperPlaneIcon as Truck,
+  LightningBoltIcon as Zap,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { DevicePhoto } from "@/components/device/device-photo";
 import { WishlistButton } from "@/components/shop/wishlist-button";

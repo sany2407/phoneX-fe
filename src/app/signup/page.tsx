@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Check } from "lucide-react";
+import { CheckIcon as Check } from "@radix-ui/react-icons";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {

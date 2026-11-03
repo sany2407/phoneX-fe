@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRightIcon as ArrowRight, MagnifyingGlassIcon as Search } from "@radix-ui/react-icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type DeviceKind, type PickerModel } from "@/lib/live-devices";

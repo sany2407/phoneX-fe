@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { RefreshCw, Search, Shield, UserRound, Users } from "lucide-react";
+import {
+  ReloadIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  LockClosedIcon as Shield,
+  PersonIcon as UserRound,
+  GroupIcon as Users,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { AdminUserListItem } from "@/lib/api-types";

@@ -3,9 +3,24 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Check, ImageUp, RotateCcw, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  CheckIcon as Check,
+  ImageIcon as ImageUp,
+  RotateCounterClockwiseIcon as RotateCcw,
+  BoxIcon as ShoppingBag,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Stepper,
+  StepperIndicator,
+  StepperItem,
+  StepperList,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from "@/components/ui/stepper";
 import { DevicePicker } from "@/components/customizer/device-picker";
 import {
   CustomDevicePreview,
@@ -24,6 +39,42 @@ import type { MaterialId } from "@/lib/types";
 import { uid } from "@/lib/editor/image-upload";
 
 type Step = "device" | "design";
+
+const STUDIO_STEPS = ["Choose your device", "Create your skin"] as const;
+
+/** Progress rail for the two-stage studio, driven by the parent's state. */
+function StudioSteps({
+  step,
+  onChange,
+}: {
+  step: number;
+  onChange: (step: number) => void;
+}) {
+  return (
+    <Stepper
+      value={step}
+      onValueChange={onChange}
+      linear
+      stepCount={STUDIO_STEPS.length}
+      className="mb-8"
+    >
+      <StepperList
+        aria-label="Custom skin studio progress"
+        className="rounded-xl border bg-card p-4"
+      >
+        {STUDIO_STEPS.map((title, index) => (
+          <StepperItem key={title} step={index}>
+            <StepperTrigger>
+              <StepperIndicator />
+              <StepperTitle>{title}</StepperTitle>
+            </StepperTrigger>
+            <StepperSeparator />
+          </StepperItem>
+        ))}
+      </StepperList>
+    </Stepper>
+  );
+}
 
 interface StudioInit {
   step: Step;
@@ -81,9 +132,16 @@ export function CustomizeClient() {
 
   const patch = (p: Partial<StudioInit>) => setInit((s) => ({ ...s, ...p }));
 
+  // Going back resets the device choice; going forward needs a device first.
+  const goToStep = (next: number) => {
+    if (next === 0) patch({ step: "device", model: null, savedId: null });
+    else if (next === 1 && model) patch({ step: "design" });
+  };
+
   if (step === "device" || !model) {
     return (
       <div className="container-x py-12 lg:py-16">
+        <StudioSteps step={0} onChange={goToStep} />
         <DevicePicker
           value={model ?? undefined}
           onConfirm={(m) => {
@@ -104,10 +162,12 @@ export function CustomizeClient() {
             Your art on your {model.kind === "other" ? "device" : model.kind}
           </h1>
         </div>
-        <Button variant="ghost" onClick={() => patch({ step: "device", model: null, savedId: null })}>
+        <Button variant="ghost" onClick={() => goToStep(0)}>
           <ArrowLeft /> Change device
         </Button>
       </div>
+
+      <StudioSteps step={1} onChange={goToStep} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-16">
         {/* live preview */}

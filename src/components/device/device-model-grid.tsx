@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import {
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  MagnifyingGlassIcon as Search,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { DeviceCard } from "@/components/device/device-card";
 import { Input } from "@/components/ui/input";
 import type {

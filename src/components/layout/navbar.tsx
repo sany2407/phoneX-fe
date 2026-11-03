@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Menu, Search, ShoppingBag, Sparkles, UserRound } from "lucide-react";
+import {
+  HeartIcon as Heart,
+  HamburgerMenuIcon as Menu,
+  MagnifyingGlassIcon as Search,
+  BoxIcon as ShoppingBag,
+  MagicWandIcon as Sparkles,
+  PersonIcon as UserRound,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

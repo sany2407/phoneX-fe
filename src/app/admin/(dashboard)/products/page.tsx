@@ -3,9 +3,20 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
-  Box, ChevronDown, ChevronRight, Image as ImageIcon, Loader2,
-  Package, Pencil, Plus, RefreshCw, Search, Trash2, Upload, X,
-} from "lucide-react";
+  CardStackIcon as Box,
+  ChevronDownIcon as ChevronDown,
+  ChevronRightIcon as ChevronRight,
+  ImageIcon,
+  ReloadIcon as Loader2,
+  BoxIcon as Package,
+  Pencil2Icon as Pencil,
+  PlusIcon as Plus,
+  ReloadIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  TrashIcon as Trash2,
+  UploadIcon as Upload,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import { productsService } from "@/lib/services/products.service";

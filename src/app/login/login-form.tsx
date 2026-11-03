@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  EyeOpenIcon as Eye,
+  EyeNoneIcon as EyeOff,
+  LockClosedIcon as LockKeyhole,
+  EnvelopeClosedIcon as Mail,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

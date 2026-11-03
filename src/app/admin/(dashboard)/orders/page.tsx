@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { RefreshCw, ShoppingCart, X } from "lucide-react";
+import {
+  ReloadIcon as RefreshCw,
+  BackpackIcon as ShoppingCart,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { ApiOrder, ApiOrderStatus, PaginatedResponse } from "@/lib/api-types";

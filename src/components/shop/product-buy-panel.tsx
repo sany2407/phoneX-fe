@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, ShieldCheck, ShoppingBag, Truck, Zap } from "lucide-react";
+import {
+  MinusIcon as Minus,
+  PlusIcon as Plus,
+  LockClosedIcon as ShieldCheck,
+  BoxIcon as ShoppingBag,
+  PaperPlaneIcon as Truck,
+  LightningBoltIcon as Zap,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import {
   Select,

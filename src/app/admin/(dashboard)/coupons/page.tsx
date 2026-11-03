@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Percent, Plus, RefreshCw, Search, X } from "lucide-react";
+import {
+  TokensIcon as Percent,
+  PlusIcon as Plus,
+  ReloadIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { adminService, type CreateCouponPayload } from "@/lib/services/admin.service";
 import type { ApiCoupon } from "@/lib/api-types";

@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Cpu, Headphones, Laptop, Smartphone, Tablet, Watch } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  CubeIcon as Cpu,
+  SpeakerLoudIcon as Headphones,
+  LaptopIcon as Laptop,
+  MobileIcon as Smartphone,
+  FrameIcon as Tablet,
+  StopwatchIcon as Watch,
+} from "@radix-ui/react-icons";
 import { DeviceCard } from "@/components/device/device-card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { devicesService } from "@/lib/services/devices.service";

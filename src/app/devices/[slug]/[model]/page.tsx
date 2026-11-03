@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRightIcon as ChevronRight } from "@radix-ui/react-icons";
 import { DeviceCard } from "@/components/device/device-card";
 import { DeviceProduct, type DeviceSkinOption } from "@/components/device/device-product";
 import { devicesService } from "@/lib/services/devices.service";

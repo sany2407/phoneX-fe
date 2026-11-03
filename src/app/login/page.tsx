@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
-import { Heart, Truck, Zap } from "lucide-react";
+import {
+  HeartIcon as Heart,
+  PaperPlaneIcon as Truck,
+  LightningBoltIcon as Zap,
+} from "@radix-ui/react-icons";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {

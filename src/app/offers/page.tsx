@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon as ArrowRight } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { CouponCard } from "@/components/home/coupon-card";

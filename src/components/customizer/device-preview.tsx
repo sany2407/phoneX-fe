@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Trash2, Upload } from "lucide-react";
+import { TrashIcon as Trash2, UploadIcon as Upload } from "@radix-ui/react-icons";
 import type { DeviceType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

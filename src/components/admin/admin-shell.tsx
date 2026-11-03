@@ -3,24 +3,24 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";import {
-  BarChart3,
-  Box,
-  ChevronLeft,
-  ClipboardList,
-  Cpu,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  MessageSquare,
-  Package,
-  Palette,
-  Percent,
-  Shapes,
-  ShieldCheck,
-  Tag,
-  Users,
-  X,
-} from "lucide-react";
+  BarChartIcon as BarChart3,
+  CardStackIcon as Box,
+  ChevronLeftIcon as ChevronLeft,
+  ClipboardIcon as ClipboardList,
+  CubeIcon as Cpu,
+  DashboardIcon as LayoutDashboard,
+  ExitIcon as LogOut,
+  HamburgerMenuIcon as Menu,
+  ChatBubbleIcon as MessageSquare,
+  BoxIcon as Package,
+  ColorWheelIcon as Palette,
+  TokensIcon as Percent,
+  ViewGridIcon as Shapes,
+  LockClosedIcon as ShieldCheck,
+  ValueIcon as Tag,
+  GroupIcon as Users,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/stores/auth-store";

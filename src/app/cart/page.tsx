@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bookmark, Heart, Minus, Plus, ShoppingBag, Trash2, ImageOff } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  BookmarkIcon as Bookmark,
+  HeartIcon as Heart,
+  MinusIcon as Minus,
+  PlusIcon as Plus,
+  BoxIcon as ShoppingBag,
+  TrashIcon as Trash2,
+  ImageIcon as ImageOff,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState } from "@/components/shop/empty-state";

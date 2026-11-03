@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRightIcon as ArrowRight, CheckIcon as Check } from "@radix-ui/react-icons";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 

@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, Brush, Layers, ScanLine } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  ColorWheelIcon as Brush,
+  LayersIcon as Layers,
+  CropIcon as ScanLine,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 

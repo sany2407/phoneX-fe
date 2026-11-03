@@ -2,7 +2,7 @@
 
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 import Link from "next/link";
-import { PackageOpen } from "lucide-react";
+import { ArchiveIcon as PackageOpen } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shop/empty-state";
 import { StatusBadge } from "@/components/orders/status-badge";

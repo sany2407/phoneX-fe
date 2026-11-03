@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Droplets, Scissors } from "lucide-react";
+import {
+  ChevronRightIcon as ChevronRight,
+  BlendingModeIcon as Droplets,
+  ScissorsIcon as Scissors,
+} from "@radix-ui/react-icons";
 import {
   Accordion,
   AccordionContent,

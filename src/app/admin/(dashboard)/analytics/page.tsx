@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, RefreshCw, TrendingUp, Users } from "lucide-react";
+import {
+  BarChartIcon as BarChart3,
+  ReloadIcon as RefreshCw,
+  ArrowTopRightIcon as TrendingUp,
+  GroupIcon as Users,
+} from "@radix-ui/react-icons";
 import { adminService } from "@/lib/services/admin.service";
 import type { SalesDataPoint, CustomerSignupDataPoint, TopProduct } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/skeleton";

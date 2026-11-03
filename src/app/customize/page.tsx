@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Layers, ScanLine, Upload } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  LayersIcon as Layers,
+  CropIcon as ScanLine,
+  UploadIcon as Upload,
+} from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {

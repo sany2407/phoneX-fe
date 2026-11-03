@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { ImagePlus, Layers, Link2, Pencil, Plus, RefreshCw, Search, Tag, Trash2, X } from "lucide-react";
+import {
+  ImageIcon as ImagePlus,
+  LayersIcon as Layers,
+  Link2Icon as Link2,
+  Pencil2Icon as Pencil,
+  PlusIcon as Plus,
+  ReloadIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  ValueIcon as Tag,
+  TrashIcon as Trash2,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import {
   adminService,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { CheckIcon as Check, CopyIcon as Copy } from "@radix-ui/react-icons";
 import { useState } from "react";
 import type { ApiCoupon } from "@/lib/api-types";
 import { couponDescription } from "@/lib/services/coupons-public";

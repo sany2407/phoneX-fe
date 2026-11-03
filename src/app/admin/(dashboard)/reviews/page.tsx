@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { MessageSquare, RefreshCw, Search, Star } from "lucide-react";
+import {
+  ChatBubbleIcon as MessageSquare,
+  ReloadIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  StarIcon as Star,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { ApiReview } from "@/lib/api-types";

@@ -2,9 +2,21 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  ChevronDown, ChevronRight, Cpu, Headphones, Laptop,
-  Pencil, Plus, RefreshCw, Search, Smartphone, Tablet, Trash2, Watch, X,
-} from "lucide-react";
+  ChevronDownIcon as ChevronDown,
+  ChevronRightIcon as ChevronRight,
+  CubeIcon as Cpu,
+  SpeakerLoudIcon as Headphones,
+  LaptopIcon as Laptop,
+  Pencil2Icon as Pencil,
+  PlusIcon as Plus,
+  ReloadIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  MobileIcon as Smartphone,
+  FrameIcon as Tablet,
+  TrashIcon as Trash2,
+  StopwatchIcon as Watch,
+  Cross2Icon as X,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import {
   adminService,

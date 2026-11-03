@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ImageOff } from "lucide-react";
+import { ImageIcon as ImageOff } from "@radix-ui/react-icons";
 import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
 import { DevicePhoto } from "@/components/device/device-photo";
 import { cn } from "@/lib/utils";

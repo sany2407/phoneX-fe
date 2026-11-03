@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Brush } from "lucide-react";
+import { ColorWheelIcon as Brush } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/shop/product-grid";
 import { EmptyState } from "@/components/shop/empty-state";

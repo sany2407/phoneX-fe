@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Tag } from "lucide-react";
+import { ValueIcon as Tag } from "@radix-ui/react-icons";
 import { useCoupons } from "@/lib/stores/coupons-store";
 import { couponLabel } from "@/lib/services/coupons-public";
 

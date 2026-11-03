@@ -3,7 +3,12 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, Ban, Check, PartyPopper } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  CircleBackslashIcon as Ban,
+  CheckIcon as Check,
+  RocketIcon as PartyPopper,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

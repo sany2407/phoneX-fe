@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, Plus, Trash2, UserRound } from "lucide-react";
+import {
+  SewingPinIcon as MapPin,
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  PersonIcon as UserRound,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

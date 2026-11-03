@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Package, RefreshCw, Save, Search } from "lucide-react";
+import {
+  BoxIcon as Package,
+  ReloadIcon as RefreshCw,
+  CheckCircledIcon as Save,
+  MagnifyingGlassIcon as Search,
+} from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { InventoryItem } from "@/lib/api-types";
