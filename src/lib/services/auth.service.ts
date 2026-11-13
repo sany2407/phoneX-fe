@@ -2,6 +2,8 @@ import { api, tokenStore } from "@/lib/api-client";
 import type {
   AuthTokens,
   ApiUser,
+  GoogleAuthResponse,
+  GoogleLoginPayload,
   LoginPayload,
   RegisterPayload,
   ForgotPasswordPayload,
@@ -22,6 +24,23 @@ export const authService = {
   /** POST /auth/login */
   async login(payload: LoginPayload): Promise<AuthTokens> {
     const data = await api.post<AuthTokens>("/auth/login", payload, {
+      public: true,
+    });
+    tokenStore.setAccess(data.accessToken);
+    tokenStore.setRefresh(data.refreshToken);
+    return data;
+  },
+
+  /**
+   * POST /auth/google
+   *
+   * Sends the ID token from Google Identity Services; the API verifies it,
+   * links or creates the customer, and returns our own tokens.
+   */
+  async googleLogin(
+    payload: GoogleLoginPayload
+  ): Promise<GoogleAuthResponse> {
+    const data = await api.post<GoogleAuthResponse>("/auth/google", payload, {
       public: true,
     });
     tokenStore.setAccess(data.accessToken);

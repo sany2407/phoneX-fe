@@ -24,7 +24,6 @@ const PROTECTED_PREFIXES = [
   "/checkout",
   "/orders",
   "/wishlist",
-  "/designs",
 ];
 
 const AUTH_ONLY_PATHS = ["/login", "/signup", "/forgot-password"];

@@ -69,6 +69,16 @@ export interface LoginPayload {
   password: string;
 }
 
+/** The `credential` (ID token JWT) returned by Google Identity Services. */
+export interface GoogleLoginPayload {
+  credential: string;
+}
+
+export interface GoogleAuthResponse extends AuthTokens {
+  /** True when this sign-in created the account. */
+  isNewUser: boolean;
+}
+
 export interface ForgotPasswordPayload {
   email: string;
 }

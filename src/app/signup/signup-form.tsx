@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/stores/auth-store";
 import { useCart } from "@/lib/stores/cart-store";
 import { useWishlist } from "@/lib/stores/wishlist-store";
+import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { ApiError } from "@/lib/api-client";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -152,6 +153,8 @@ export function SignupForm() {
       >
         {pending ? "Creating account…" : "Create account"}
       </Button>
+
+      <GoogleSignIn redirectTo="/account" text="signup_with" />
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

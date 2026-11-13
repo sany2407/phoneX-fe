@@ -25,6 +25,8 @@ interface AuthState {
   // --- Auth actions (async — call real API) ---
   register: (payload: RegisterPayload) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
+  /** Exchange a Google ID token for a session. Resolves true on first sign-up. */
+  googleLogin: (credential: string) => Promise<boolean>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -75,6 +77,13 @@ export const useAuth = create<AuthState>()(
         const data = await authService.login(payload);
         tokenStore.setRole(data.user.role);
         set({ user: toUser(data.user) });
+      },
+
+      googleLogin: async (credential) => {
+        const data = await authService.googleLogin({ credential });
+        tokenStore.setRole(data.user.role);
+        set({ user: toUser(data.user) });
+        return data.isNewUser;
       },
 
       logout: async () => {
