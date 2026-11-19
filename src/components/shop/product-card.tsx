@@ -100,9 +100,13 @@ export function ProductCard({
           <h3 className="mt-1 truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] group-hover:text-primary transition-colors duration-150">
             {product.name}
           </h3>
-          <p className="mt-0.5 text-xs capitalize text-muted-foreground/70">
-            {product.material.replace("-", " ")} · {product.finish}
-          </p>
+          {(product.material || product.finish) && (
+            <p className="mt-0.5 text-xs capitalize text-muted-foreground/70">
+              {[product.material?.replace("-", " "), product.finish]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
           <div className="mt-2.5 flex items-center gap-2">
             {price != null ? (
               <Price price={price} original={original} />

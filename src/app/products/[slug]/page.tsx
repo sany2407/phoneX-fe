@@ -39,9 +39,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const product = await productsService.getBySlug(slug);
     const title = `${product.name} Skin`;
     const { price } = priceView(product);
+    const finishWords = [product.material?.replace("-", " "), product.finish]
+      .filter(Boolean)
+      .join(", ");
     return {
       title: price != null ? `${title} · ${formatINR(price)}` : title,
-      description: `${product.name} ${product.category?.name?.toLowerCase() ?? ""} skin for phones & laptops. ${product.material}, ${product.finish} finish. Precision cut with camera and port cutouts.`,
+      description: `${product.name} ${product.category?.name?.toLowerCase() ?? ""} skin for phones & laptops.${finishWords ? ` ${finishWords} finish.` : ""} Precision cut with camera and port cutouts.`,
       alternates: { canonical: `/products/${slug}` },
       openGraph: { title, type: "website" },
     };
@@ -113,8 +116,14 @@ export default async function ProductPage({ params }: Props) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             {product.category && <Badge variant="secondary">{product.category.name}</Badge>}
-            <Badge variant="outline" className="capitalize">{product.material.replace("-", " ")}</Badge>
-            <Badge variant="outline">{product.finish} finish</Badge>
+            {product.material && (
+              <Badge variant="outline" className="capitalize">
+                {product.material.replace("-", " ")}
+              </Badge>
+            )}
+            {product.finish && (
+              <Badge variant="outline">{product.finish} finish</Badge>
+            )}
             {discountPct != null && discountPct > 0 && (
               <Badge className="bg-sale text-white">Save {discountPct}%</Badge>
             )}

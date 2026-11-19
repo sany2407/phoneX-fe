@@ -185,8 +185,15 @@ export function ProductBuyPanel({ product }: { product: ApiProduct }) {
         </li>
         <li className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
-          <span className="capitalize">{product.material.replace("-", " ")}</span>
-          &nbsp;— residue-free removal, 1-year warranty
+          {product.material && (
+            <>
+              <span className="capitalize">
+                {product.material.replace("-", " ")}
+              </span>
+              &nbsp;—{" "}
+            </>
+          )}
+          residue-free removal, 1-year warranty
         </li>
       </ul>
     </div>
