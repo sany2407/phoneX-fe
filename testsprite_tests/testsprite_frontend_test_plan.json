@@ -1,0 +1,1609 @@
+[
+  {
+    "id": "TC001",
+    "title": "Sign in and reach the account page",
+    "description": "A returning customer can sign in with valid credentials and access their account page.",
+    "category": "Customer sign in with email and password",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Create an order through checkout to payment step",
+    "description": "An authenticated customer can enter shipping details and a coupon in checkout and reach the external payment step with an order created.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /checkout"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the shipping address fields with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Apply a coupon code if available"
+      },
+      {
+        "type": "action",
+        "description": "Continue to payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an order is created and the payment step is shown"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Admin can sign in to the dashboard",
+    "description": "An admin user can sign in successfully and reach the protected dashboard.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the admin dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create a new customer account",
+    "description": "A new customer can register and land on the account page after successful sign-up.",
+    "category": "Customer registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the name field with Test Customer"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a unique valid email address"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password confirmation field with the same password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Complete checkout address and reach payment creation",
+    "description": "An authenticated customer can enter a full shipping address, apply a coupon, and proceed to the payment step for order creation.",
+    "category": "Checkout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /checkout"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the full name field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the phone field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the address field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the city field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the state field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the PIN code field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Apply a coupon code"
+      },
+      {
+        "type": "action",
+        "description": "Click the pay button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the payment step is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Open product details and add a skin to the cart",
+    "description": "A shopper can open a product page, change quantity, and add the skin to the cart from product details.",
+    "category": "Product detail and add to cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Open a product from the catalog"
+      },
+      {
+        "type": "action",
+        "description": "Change the quantity"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart count increases"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation toast is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Navigate from shop browsing to cart update",
+    "description": "A shopper can filter or page through the shop, open a product, add it to cart, and see the cart summary update.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Apply a shop filter"
+      },
+      {
+        "type": "action",
+        "description": "Open a product from the filtered results"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart count or subtotal is updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Browse products with filters and sorting",
+    "description": "A shopper can refine the shop by filters and sort order and see the product grid update accordingly.",
+    "category": "Browse and filter the shop",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Open the filters panel"
+      },
+      {
+        "type": "action",
+        "description": "Select a category filter"
+      },
+      {
+        "type": "action",
+        "description": "Select a material filter"
+      },
+      {
+        "type": "action",
+        "description": "Choose a sort order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product grid shows filtered results"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product list reflects the selected sort order"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Add a product from the shop and see the cart summary update",
+    "description": "A shopper can move from the shop catalog to a product page and see cart count and subtotal update after adding an item.",
+    "category": "Product detail and add to cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Open a product from the catalog"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart count increases"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart subtotal updates"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Open a product from the shop",
+    "description": "A shopper can open a product from the shop grid and reach the product detail page.",
+    "category": "Browse and filter the shop",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Open a product card"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product detail page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product details are visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Open a compatible phone model and add a skin to the cart",
+    "description": "A shopper can open a phone model page, choose a variant, and add a compatible skin to the cart successfully.",
+    "category": "Device model page",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /devices/phones"
+      },
+      {
+        "type": "action",
+        "description": "Open a brand page"
+      },
+      {
+        "type": "action",
+        "description": "Open a specific phone model page"
+      },
+      {
+        "type": "action",
+        "description": "Choose a material or finish variant"
+      },
+      {
+        "type": "action",
+        "description": "Add the item to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify compatible skins for the selected device are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation toast is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Admin can create a product from the products page",
+    "description": "An admin can add a new product through the products management screen and see it appear in the list.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the products management page"
+      },
+      {
+        "type": "action",
+        "description": "Create a new product with valid details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly created product is shown in the product list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Find a compatible skin from device browsing",
+    "description": "A shopper can browse device types and models, inspect compatible skin options, and add one to the cart.",
+    "category": "Custom studio",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /devices"
+      },
+      {
+        "type": "action",
+        "description": "Open a device type"
+      },
+      {
+        "type": "action",
+        "description": "Open a brand or model page"
+      },
+      {
+        "type": "action",
+        "description": "Open the exact device model page"
+      },
+      {
+        "type": "action",
+        "description": "Select a compatible skin variant"
+      },
+      {
+        "type": "action",
+        "description": "Add the skin to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart is updated with the selected skin"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Review cart quantity changes and subtotal updates",
+    "description": "An authenticated customer can increase and decrease an item quantity in the cart and see the subtotal update accordingly.",
+    "category": "Cart management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /cart"
+      },
+      {
+        "type": "action",
+        "description": "Increase the quantity of an item in the cart"
+      },
+      {
+        "type": "action",
+        "description": "Decrease the quantity of the same item in the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart subtotal updates"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Search for a product or collection",
+    "description": "A shopper can submit a search query and see matching products or collections.",
+    "category": "Search products and collections",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /search"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid search query"
+      },
+      {
+        "type": "action",
+        "description": "Submit the search"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching search results are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the search results are not empty"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Start a custom skin and save the design",
+    "description": "A user can choose a device category in the custom studio, complete the design steps, and see the saved design in their account.",
+    "category": "Custom studio",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /customize"
+      },
+      {
+        "type": "action",
+        "description": "Choose a device category"
+      },
+      {
+        "type": "action",
+        "description": "Open the studio for that device type"
+      },
+      {
+        "type": "action",
+        "description": "Select a device model"
+      },
+      {
+        "type": "action",
+        "description": "Choose artwork for the design"
+      },
+      {
+        "type": "action",
+        "description": "Pick a finish"
+      },
+      {
+        "type": "action",
+        "description": "Save the design"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the saved design is displayed in the saved designs view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Add a custom design to the cart",
+    "description": "A user can complete a custom studio design and add it to the cart successfully.",
+    "category": "Custom studio",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /customize"
+      },
+      {
+        "type": "action",
+        "description": "Choose a device category"
+      },
+      {
+        "type": "action",
+        "description": "Open the studio for that device type"
+      },
+      {
+        "type": "action",
+        "description": "Select a device model"
+      },
+      {
+        "type": "action",
+        "description": "Choose artwork for the design"
+      },
+      {
+        "type": "action",
+        "description": "Pick a finish"
+      },
+      {
+        "type": "action",
+        "description": "Add the custom design to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart is updated with the custom design"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Browse device collections by brand",
+    "description": "A shopper can open a device type page, narrow the collections by brand, and view the filtered device list.",
+    "category": "Browse devices by type and brand",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /devices/phones"
+      },
+      {
+        "type": "action",
+        "description": "Select a brand filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the device collection list is narrowed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify compatible device collections are still displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Remove a single item from the cart",
+    "description": "An authenticated customer can remove an item from the cart and see the cart update accordingly.",
+    "category": "Cart management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /cart"
+      },
+      {
+        "type": "action",
+        "description": "Remove an item from the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart updates to reflect the removed item"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Show validation for missing sign-in details",
+    "description": "The sign-in form shows inline validation when a customer submits empty or malformed input.",
+    "category": "Customer sign in with email and password",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation messages are displayed for the sign-in form"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Clear shop filters to return to the full catalogue",
+    "description": "A shopper can clear applied shop filters and return to the unfiltered product grid.",
+    "category": "Browse and filter the shop",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Open the filters panel"
+      },
+      {
+        "type": "action",
+        "description": "Select a category filter"
+      },
+      {
+        "type": "action",
+        "description": "Select a finish filter"
+      },
+      {
+        "type": "action",
+        "description": "Clear all filters"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the unfiltered product grid is shown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no filter selections remain active"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "See only skins that fit the selected device model",
+    "description": "A shopper can open a specific device model and confirm the page shows skins matched to that exact device.",
+    "category": "Device model page",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /devices/phones"
+      },
+      {
+        "type": "action",
+        "description": "Open a brand page"
+      },
+      {
+        "type": "action",
+        "description": "Open a specific phone model page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify skins for the exact device model are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify unrelated devices are not shown as compatible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "View order history and open an order",
+    "description": "An authenticated customer can see their past orders and open one to review its details.",
+    "category": "Orders",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /orders"
+      },
+      {
+        "type": "action",
+        "description": "Open an order from the history list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order detail view is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order items and status information are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Save a product to the wishlist",
+    "description": "An authenticated shopper can save a product and see it listed on the wishlist page.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Open a product from the product listing"
+      },
+      {
+        "type": "action",
+        "description": "Save the product to the wishlist"
+      },
+      {
+        "type": "action",
+        "description": "Open the wishlist page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the saved product is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Customer sign in is rejected on the admin portal",
+    "description": "A customer account cannot access the admin dashboard and sees an access denied outcome.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an access denied message is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Open a compatible device collection or model",
+    "description": "A shopper can open a compatible device collection or model from a device type page.",
+    "category": "Browse devices by type and brand",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /devices/phones"
+      },
+      {
+        "type": "action",
+        "description": "Open a compatible collection card"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the compatible collection or model page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify variant or compatibility information is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "Reject invalid sign-in credentials",
+    "description": "The sign-in form shows an error when a customer enters incorrect credentials.",
+    "category": "Customer sign in with email and password",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with invalid@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with an incorrect password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an error message is displayed for the failed sign-in attempt"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "Empty the cart completely",
+    "description": "An authenticated customer can remove all items from the cart and see the empty cart state.",
+    "category": "Cart management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /cart"
+      },
+      {
+        "type": "action",
+        "description": "Remove every item from the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the empty cart state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC029",
+    "title": "Move through shop pages",
+    "description": "A shopper can move to the next page of shop results and see a different set of products.",
+    "category": "Browse and filter the shop",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /shop"
+      },
+      {
+        "type": "action",
+        "description": "Move to the next page of results"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new page of products is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the visible product set has changed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC030",
+    "title": "Save a variant choice before adding a device skin to the cart",
+    "description": "A shopper can change the material or finish on a device model page and the selected variant is reflected when the item is added to the cart.",
+    "category": "Device model page",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /devices/tablets"
+      },
+      {
+        "type": "action",
+        "description": "Open a brand page"
+      },
+      {
+        "type": "action",
+        "description": "Open a specific tablet model page"
+      },
+      {
+        "type": "action",
+        "description": "Choose a material or finish variant"
+      },
+      {
+        "type": "action",
+        "description": "Add the item to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected variant is reflected in the added item"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation toast is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC031",
+    "title": "Search for a product and open it",
+    "description": "A visitor can search for a product and open a matching result from the search page.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /search"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the search field with a relevant product keyword"
+      },
+      {
+        "type": "action",
+        "description": "Submit the search"
+      },
+      {
+        "type": "action",
+        "description": "Open a matching search result"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product detail page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC032",
+    "title": "Admin can update an existing product",
+    "description": "An admin can edit product details and see the updated information reflected in the list.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the products management page"
+      },
+      {
+        "type": "action",
+        "description": "Edit an existing product with valid changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated product information is shown in the product list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC033",
+    "title": "Adjust product quantity before adding to cart",
+    "description": "A shopper can increase or decrease quantity on a product page before adding the item and the cart reflects the chosen quantity.",
+    "category": "Product detail and add to cart",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /products/abstract"
+      },
+      {
+        "type": "action",
+        "description": "Change the quantity"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart reflects the selected quantity"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation toast is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC034",
+    "title": "View order history and order details",
+    "description": "An authenticated customer can open their order history and inspect a completed order's status and items.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /orders"
+      },
+      {
+        "type": "action",
+        "description": "Open an order from the history list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the order detail view shows the status timeline and item details"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC035",
+    "title": "Access the cart from an authenticated session",
+    "description": "A signed-in customer can open the cart page and manage a previously saved cart.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart contents or empty cart state is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Admin can create a coupon",
+    "description": "An admin can create a coupon code and see it appear in the coupons list.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the coupons management page"
+      },
+      {
+        "type": "action",
+        "description": "Create a coupon with valid details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new coupon appears in the coupons list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Show validation for weak or mismatched sign-up input",
+    "description": "The registration form blocks weak passwords or mismatched confirmation values with inline validation.",
+    "category": "Customer registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the name field with Test Customer"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a unique valid email address"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a weak password"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password confirmation field with a different password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation messages are displayed for the registration form"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Show validation for an incomplete checkout address",
+    "description": "An authenticated customer who submits an incomplete shipping address sees validation errors and cannot proceed to payment.",
+    "category": "Checkout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /checkout"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the full name field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the phone field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Submit the address form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an address validation error is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Open a design collection and view its products",
+    "description": "A visitor can open a collection from the public collections page and see the products inside it.",
+    "category": "Browse design collections",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /designs"
+      },
+      {
+        "type": "action",
+        "description": "Open a collection"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the collection's products are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the collection detail view is shown"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Request a password reset link",
+    "description": "A customer can request a password reset confirmation by submitting their email address.",
+    "category": "Password reset request",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /forgot-password"
+      },
+      {
+        "type": "action",
+        "description": "Enter a registered email address into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the reset request form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation message is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Browse all design collections",
+    "description": "A visitor can open the public collections page and see all skin collections available to browse.",
+    "category": "Browse design collections",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /designs"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify collection cards are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify multiple collections are available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "Admin can review analytics metrics",
+    "description": "An admin can open the analytics page and view the storefront performance metrics.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the analytics page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sales and customer metrics are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC043",
+    "title": "Remove a saved wishlist item",
+    "description": "An authenticated shopper can remove a saved wishlist item and reach an empty wishlist state.",
+    "category": "Wishlist",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /wishlist"
+      },
+      {
+        "type": "action",
+        "description": "Remove the saved product"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state message is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC044",
+    "title": "Show empty order history for a new customer",
+    "description": "A newly signed-in customer with no past purchases sees the empty orders state.",
+    "category": "Orders",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /orders"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the empty orders state is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC045",
+    "title": "Admin can view storefront design settings",
+    "description": "An admin can open the design settings page and review the live design controls.",
+    "category": "Admin sign in and catalogue management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the admin email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the design settings page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify storefront design controls are displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC046",
+    "title": "See an empty search state for no matches",
+    "description": "A shopper can search for a query with no matches and see an empty results state.",
+    "category": "Search products and collections",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /search"
+      },
+      {
+        "type": "action",
+        "description": "Enter a query with no matches"
+      },
+      {
+        "type": "action",
+        "description": "Submit the search"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state message is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no search results are displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC047",
+    "title": "Subscribe to the newsletter from the footer",
+    "description": "A visitor can enter an email address in the footer and receive a subscription confirmation.",
+    "category": "Newsletter subscription",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the footer"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with test@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Submit the subscription form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a subscription confirmation is visible"
+      }
+    ],
+    "priority": "Low"
+  }
+]
