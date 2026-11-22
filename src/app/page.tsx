@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRightIcon as ArrowRight, MagnifyingGlassIcon as Search } from "@radix-ui/react-icons";
 import { DeviceFinder } from "@/components/device/device-finder";
 import { Hero } from "@/components/home/hero";
+import { DeviceCategoryShowcase } from "@/components/home/device-category-showcase";
 import { CategoryStrip } from "@/components/home/category-strip";
 import { CustomBanner } from "@/components/home/custom-banner";
 import { ProductGrid } from "@/components/shop/product-grid";
@@ -55,6 +56,9 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+
+      {/* ── Shop by device ── */}
+      <DeviceCategoryShowcase />
 
       {/* ── Device finder ── */}
       <section id="find-device" className="container-x scroll-mt-28 section-pad">
