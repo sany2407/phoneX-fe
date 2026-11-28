@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/shop/empty-state";
 import { productsService } from "@/lib/services/products.service";
 import { categoriesService } from "@/lib/services/categories.service";
 import type { ApiCategory } from "@/lib/api-types";
+import { API_BASE_URL } from "@/lib/api-base";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -15,7 +16,7 @@ type Props = {
 
 async function fetchCategories(): Promise<ApiCategory[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const base = API_BASE_URL;
     const res = await fetch(`${base}/categories`, { next: { revalidate: 300 } });
     if (!res.ok) return [];
     const json = await res.json();

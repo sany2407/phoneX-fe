@@ -109,7 +109,7 @@
 - **Test Visualization and Result:** https://www.testsprite.com/dashboard-v3/o/446e0213-311d-50b1-b847-3f35264db60a/projects/mcp/9c0edfdc-7c5d-5760-ae24-d6c075620a38/test/bb716637-b4f0-471e-b925-33f467ef7286
 - **Status:** ⚠️ Blocked
 - **Severity:** HIGH
-- **Analysis / Findings:** Root cause found in the API. Refresh tokens were signed with `{ userId }` only, so two sign-ins for the same customer inside the same second produced byte-identical JWTs and the second insert hit the unique index on `refresh_tokens.token`. The API reported the Prisma conflict as “A record with this token already exists.” TestSprite runs several authenticated tests in parallel against one account, which is exactly the race. Fixed by adding a unique `jti` to every refresh token (`phoneX-be/src/utils/jwt.ts`); needs a backend deploy before the wishlist flow can be re-run.
+- **Analysis / Findings:** Root cause found in the API. Refresh tokens were signed with `{ userId }` only, so two sign-ins for the same customer inside the same second produced byte-identical JWTs and the second insert hit the unique index on `refresh_tokens.token`. The API reported the Prisma conflict as “A record with this token already exists.” TestSprite runs several authenticated tests in parallel against one account, which is exactly the race. Fixed by adding a unique `jti` to every refresh token (`phoneX-be/src/utils/jwt.ts`), deployed to the live API, and verified with two concurrent logins — both now return `200`. The wishlist flow still needs a TestSprite re-run to be marked passed.
 
 ---
 
@@ -144,7 +144,7 @@
 
 > 83.33% of the selected flows passed with no functional failures. The two blocked flows share one upstream cause, not a UI defect.
 
-- **Concurrent sign-in race (high, fixed, not yet deployed).** Refresh tokens were deterministic within a one-second window, so a second login for the same customer violated the unique token index. Parallel TestSprite tests triggered it. Fixed in `phoneX-be/src/utils/jwt.ts` by adding a `jti`; deploy the backend and re-run TC014 and TC024 to confirm.
+- **Concurrent sign-in race (high, fixed and deployed).** Refresh tokens were deterministic within a one-second window, so a second login for the same customer violated the unique token index. Parallel TestSprite tests triggered it. Fixed in `phoneX-be/src/utils/jwt.ts` by adding a `jti`; two concurrent logins now both return `200`. Re-run TC014 and TC024 to move them from blocked to passed.
 - **Cart and wishlist are unverified until that re-run.** Both require a signed-in session, so their pass/fail status is currently unknown rather than failing.
 - **Not automatable by design:** Google sign-in (cross-origin Google iframe and Google blocks scripted accounts) and the Razorpay sheet (external payment surface). Only the button presence and the pre-payment order step are covered.
 - **Live-data dependency:** product and collection names come from the production API, so assertions must keep using stable seeds; a catalogue rename can invalidate search assertions.

@@ -9,8 +9,9 @@
  *   server (Server Components / Route Handlers) contexts
  */
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+import { API_BASE_URL } from "@/lib/api-base";
+
+const BASE_URL = API_BASE_URL;
 
 // ---------------------------------------------------------------------------
 // Error type

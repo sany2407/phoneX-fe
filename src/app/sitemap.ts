@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
+import { API_BASE_URL } from "@/lib/api-base";
 
 const BASE = "https://phonex.in";
-const API =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+const API = API_BASE_URL;
 
 async function get<T>(path: string): Promise<T[]> {
   try {

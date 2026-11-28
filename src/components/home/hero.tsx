@@ -8,6 +8,7 @@ import {
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { PhoneOrbit } from "@/components/home/phone-orbit";
+import { API_BASE_URL } from "@/lib/api-base";
 
 /** Local hero asset path — real files under public/images/devices. */
 function localDeviceImage(brandSlug: string, modelSlug: string, file = "hero.png") {
@@ -37,7 +38,7 @@ const STAT_ICONS = [Crown, Smartphone, Layers];
 
 async function fetchCounts(): Promise<{ label: string; value: string }[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const base = API_BASE_URL;
     const [brandsRes, typesRes, catsRes] = await Promise.all([
       fetch(`${base}/devices/brands`, { next: { revalidate: 600 } }),
       fetch(`${base}/devices/types`, { next: { revalidate: 600 } }),

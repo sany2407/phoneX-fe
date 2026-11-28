@@ -2,13 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRightIcon as ArrowRight, LayersIcon as Layers } from "@radix-ui/react-icons";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { API_BASE_URL } from "@/lib/api-base";
 import type { ApiCategory } from "@/lib/api-types";
 
 // ─── fetch from API ───────────────────────────────────────────────────────────
 
 async function fetchApiCategories(): Promise<ApiCategory[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
+    const base = API_BASE_URL;
     const res  = await fetch(`${base}/categories`, {
       next: { revalidate: 300 }, // revalidate every 5 minutes
     });

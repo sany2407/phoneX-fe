@@ -6,6 +6,7 @@
  * `{ code, discountType, discountValue, minOrderValue, maxDiscount, validUntil }`.
  */
 import type { ApiCoupon } from "@/lib/api-types";
+import { API_BASE_URL } from "@/lib/api-base";
 
 /** Human-readable one-liner for a coupon, e.g. "10% off — use code PHONE10". */
 export function couponLabel(c: ApiCoupon): string {
@@ -43,7 +44,7 @@ export function couponDescription(c: ApiCoupon): string {
 
 export async function fetchPublicCoupons(): Promise<ApiCoupon[]> {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+    const base = API_BASE_URL;
     const res = await fetch(`${base}/coupons`, {
       next: { revalidate: 300 },
     });

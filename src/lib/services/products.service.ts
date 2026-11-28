@@ -1,4 +1,5 @@
 import { api } from "@/lib/api-client";
+import { API_BASE_URL } from "@/lib/api-base";
 import type {
   ApiProduct,
   ApiVariant,
@@ -17,8 +18,7 @@ function buildQuery(params: Record<string, unknown>): string {
   return str ? `?${str}` : "";
 }
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 
 export interface ProductFacets {
   materials: string[];
