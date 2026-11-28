@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import {
   MinusIcon as Minus,
   PlusIcon as Plus,
-  LockClosedIcon as ShieldCheck,
-  BoxIcon as ShoppingBag,
-  PaperPlaneIcon as Truck,
-  LightningBoltIcon as Zap,
-} from "@radix-ui/react-icons";
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,

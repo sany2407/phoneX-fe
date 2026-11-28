@@ -1,10 +1,10 @@
 import Link from "next/link";
 import {
-  GlobeIcon as Globe,
-  EnvelopeClosedIcon as Mail,
-  SewingPinIcon as MapPin,
-  ChatBubbleIcon as MessageCircle,
-} from "@radix-ui/react-icons";
+  Globe,
+  Mail,
+  MapPin,
+  MessageCircle,
+} from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { NewsletterForm } from "@/components/layout/newsletter-form";
 

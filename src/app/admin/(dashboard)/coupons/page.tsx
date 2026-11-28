@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  TokensIcon as Percent,
+  Percent,
   PlusIcon as Plus,
-  ReloadIcon as RefreshCw,
-  MagnifyingGlassIcon as Search,
-  Cross2Icon as X,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { adminService, type CreateCouponPayload } from "@/lib/services/admin.service";
 import type { ApiCoupon } from "@/lib/api-types";

@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  SewingPinIcon as MapPin,
+  MapPin,
   PlusIcon as Plus,
-  TrashIcon as Trash2,
-  PersonIcon as UserRound,
-} from "@radix-ui/react-icons";
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

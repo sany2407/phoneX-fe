@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
-  EyeOpenIcon as Eye,
-  EyeNoneIcon as EyeOff,
-  LockClosedIcon as Lock,
-  LockClosedIcon as ShieldCheck,
-  MagicWandIcon as Sparkles,
-} from "@radix-ui/react-icons";
+  Eye,
+  EyeOff,
+  Lock,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

@@ -3,12 +3,12 @@
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import {
-  CheckCircledIcon as CircleCheckIcon,
-  InfoCircledIcon as InfoIcon,
-  ExclamationTriangleIcon as TriangleAlertIcon,
-  CrossCircledIcon as OctagonXIcon,
-  ReloadIcon as Loader2Icon,
-} from "@radix-ui/react-icons";
+  CircleCheck as CircleCheckIcon,
+  Info as InfoIcon,
+  TriangleAlert as TriangleAlertIcon,
+  OctagonX as OctagonXIcon,
+  Loader2 as Loader2Icon,
+} from "lucide-react";
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()

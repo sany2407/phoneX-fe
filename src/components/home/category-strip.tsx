@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRightIcon as ArrowRight, LayersIcon as Layers } from "@radix-ui/react-icons";
+import { ArrowRight, Layers } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import type { ApiCategory } from "@/lib/api-types";
 

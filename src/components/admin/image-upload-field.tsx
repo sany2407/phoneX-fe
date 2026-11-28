@@ -4,9 +4,9 @@ import { useRef, useState } from "react";
 import {
   ImageIcon,
   UploadIcon,
-  Cross2Icon,
-  ReloadIcon,
-} from "@radix-ui/react-icons";
+  X,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +106,7 @@ export function ImageUploadField({
                 className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-background/90 text-muted-foreground shadow-sm ring-1 ring-foreground/10 transition-colors hover:text-destructive"
                 aria-label="Remove image"
               >
-                <Cross2Icon className="size-3" />
+                <X className="size-3" />
               </button>
             </>
           ) : (
@@ -115,7 +115,7 @@ export function ImageUploadField({
 
           {busy && (
             <span className="absolute inset-0 grid place-items-center bg-background/80 text-xs font-medium text-muted-foreground">
-              <ReloadIcon className="size-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             </span>
           )}
         </div>

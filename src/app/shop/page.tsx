@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { BoxIcon as PackageSearch } from "@radix-ui/react-icons";
+import { PackageSearch } from "lucide-react";
 import { FilterSidebar } from "@/components/shop/filter-sidebar";
 import { SortSelect, TypeTabs } from "@/components/shop/catalog-controls";
 import { ProductGrid } from "@/components/shop/product-grid";

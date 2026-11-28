@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeftIcon as ArrowLeft,
-  CircleBackslashIcon as Ban,
-  CheckIcon as Check,
-  RocketIcon as PartyPopper,
-} from "@radix-ui/react-icons";
+  Ban,
+  Check,
+  PartyPopper,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

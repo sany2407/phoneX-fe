@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ReloadIcon as RefreshCw,
+  Loader2 as RefreshCw,
   BackpackIcon as ShoppingCart,
-  Cross2Icon as X,
-} from "@radix-ui/react-icons";
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { ApiOrder, ApiOrderStatus, PaginatedResponse } from "@/lib/api-types";

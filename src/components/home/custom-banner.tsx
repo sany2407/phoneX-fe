@@ -1,10 +1,10 @@
 import Link from "next/link";
 import {
-  ArrowRightIcon as ArrowRight,
-  ColorWheelIcon as Brush,
-  LayersIcon as Layers,
-  CropIcon as ScanLine,
-} from "@radix-ui/react-icons";
+  ArrowRight as ArrowRight,
+  Palette as Brush,
+  Layers,
+  ScanLine,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 

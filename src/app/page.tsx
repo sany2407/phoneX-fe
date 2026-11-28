@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRightIcon as ArrowRight, MagnifyingGlassIcon as Search } from "@radix-ui/react-icons";
+import { ArrowRight, Search } from "lucide-react";
 import { DeviceFinder } from "@/components/device/device-finder";
 import { Hero } from "@/components/home/hero";
 import { DeviceCategoryShowcase } from "@/components/home/device-category-showcase";

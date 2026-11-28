@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Cross2Icon as X,
-  LayersIcon as Layers,
-  MagnifyingGlassIcon as Search,
-} from "@radix-ui/react-icons";
+  X,
+  Layers,
+  Search,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type {

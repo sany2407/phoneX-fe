@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
-import { HeartIcon as Heart } from "@radix-ui/react-icons";
+import { Heart } from "lucide-react";
 import { ProductCard } from "@/components/shop/product-card";
 import { EmptyState } from "@/components/shop/empty-state";
 import { useWishlist } from "@/lib/stores/wishlist-store";

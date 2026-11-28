@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 import Link from "next/link";
 import {
-  Pencil2Icon as Pencil,
-  BoxIcon as ShoppingBag,
-  TrashIcon as Trash2,
-} from "@radix-ui/react-icons";
+  Pencil,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shop/empty-state";

@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import {
-  ArrowRightIcon as ArrowRight,
+  ArrowRight as ArrowRight,
   BookmarkIcon as Bookmark,
-  HeartIcon as Heart,
+  Heart,
   MinusIcon as Minus,
   PlusIcon as Plus,
-  BoxIcon as ShoppingBag,
-  TrashIcon as Trash2,
-  ImageIcon as ImageOff,
-} from "@radix-ui/react-icons";
+  ShoppingBag,
+  Trash2,
+  ImageOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState } from "@/components/shop/empty-state";

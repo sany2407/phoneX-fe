@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ArrowRightIcon as ArrowRight,
-  LayersIcon as Layers,
-  CropIcon as ScanLine,
-  UploadIcon as Upload,
-} from "@radix-ui/react-icons";
+  ArrowRight as ArrowRight,
+  Layers,
+  ScanLine,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 

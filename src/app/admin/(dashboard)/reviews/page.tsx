@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  ChatBubbleIcon as MessageSquare,
-  ReloadIcon as RefreshCw,
-  MagnifyingGlassIcon as Search,
-  StarIcon as Star,
-} from "@radix-ui/react-icons";
+  MessageSquare,
+  RefreshCw,
+  Search,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { ApiReview } from "@/lib/api-types";

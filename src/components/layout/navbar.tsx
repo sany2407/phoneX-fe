@@ -3,14 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  HeartIcon as Heart,
-  HamburgerMenuIcon as Menu,
-  MagnifyingGlassIcon as Search,
-  BoxIcon as ShoppingBag,
-  MagicWandIcon as Sparkles,
-  PersonIcon as UserRound,
-} from "@radix-ui/react-icons";
+import { Heart, Menu, Search, ShoppingBag, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -152,7 +145,7 @@ export function Navbar() {
 
             {/* Account — direct Sign in button when logged out, dropdown when logged in */}
             {user ? (
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -163,7 +156,7 @@ export function Navbar() {
                     <UserRound />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" sideOffset={8} className="w-48">
                   <DropdownMenuLabel className="capitalize">{user.name}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

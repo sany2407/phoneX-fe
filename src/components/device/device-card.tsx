@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "@radix-ui/react-icons";
+import { ArrowRight } from "lucide-react";
 import type { ApiBrand, ApiDeviceModel } from "@/lib/api-types";
 import { DevicePhoto } from "@/components/device/device-photo";
 import { BrandLogo } from "@/components/device/brand-logo";
@@ -80,7 +80,7 @@ export function DeviceCard({
           </span>
         </span>
 
-        <ArrowRightIcon
+        <ArrowRight
           aria-hidden="true"
           className="hidden size-3.5 shrink-0 text-muted-foreground/50 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary sm:block"
         />

@@ -3,15 +3,15 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRightIcon as ArrowRight,
-  CheckIcon as Check,
-  ChevronDownIcon as ChevronDown,
+  ArrowRight as ArrowRight,
+  Check,
+  ChevronDown as ChevronDown,
   LaptopIcon as Laptop,
-  ReloadIcon as RefreshCw,
-  MagnifyingGlassIcon as Search,
-  MobileIcon as Smartphone,
-  FrameIcon as Tablet,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  Search,
+  Smartphone,
+  Tablet,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { type PickerModel } from "@/lib/live-devices";

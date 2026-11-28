@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon } from "@radix-ui/react-icons"
+import { Check as CheckIcon } from "lucide-react"
 import { Slot, Tabs as TabsPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"

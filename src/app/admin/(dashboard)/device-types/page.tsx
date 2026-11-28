@@ -2,21 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  CubeIcon as Cpu,
-  SpeakerLoudIcon as Headphones,
+  Cpu,
+  Headphones,
   LaptopIcon as Laptop,
-  Pencil2Icon as Pencil,
+  Pencil,
   PlusIcon as Plus,
-  ReloadIcon as RefreshCw,
-  RotateCounterClockwiseIcon as RotateCcw,
-  MagnifyingGlassIcon as Search,
-  ViewGridIcon as Shapes,
-  MobileIcon as Smartphone,
-  FrameIcon as Tablet,
-  TrashIcon as Trash2,
-  StopwatchIcon as Watch,
-  Cross2Icon as X,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  RotateCcw,
+  Search,
+  Shapes,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Clock as Watch,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { ApiDeviceType } from "@/lib/api-types";

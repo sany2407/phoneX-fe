@@ -3,10 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   BoxIcon as Package,
-  ReloadIcon as RefreshCw,
-  CheckCircledIcon as Save,
-  MagnifyingGlassIcon as Search,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  Save,
+  Search,
+} from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { InventoryItem } from "@/lib/api-types";

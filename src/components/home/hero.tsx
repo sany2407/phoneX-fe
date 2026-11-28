@@ -1,11 +1,13 @@
 import Link from "next/link";
 import {
-  ArrowRightIcon as ArrowRight,
-  StarFilledIcon as Crown,
-  LayersIcon as Layers,
-  MobileIcon as Smartphone,
-  MagicWandIcon as Sparkles,
-} from "@radix-ui/react-icons";
+  ArrowRight,
+  Layers,
+  Smartphone,
+  Sparkles,
+  ShieldCheck,
+  Truck,
+  Star,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhoneOrbit } from "@/components/home/phone-orbit";
 
@@ -33,7 +35,7 @@ const SLIDES: [
 ];
 
 /** Stat icons, in the order `fetchCounts` returns its figures. */
-const STAT_ICONS = [Crown, Smartphone, Layers];
+const STAT_ICONS = [Star, Smartphone, Layers];
 
 async function fetchCounts(): Promise<{ label: string; value: string }[]> {
   try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { HeartIcon as Heart } from "@radix-ui/react-icons";
+import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { useWishlist } from "@/lib/stores/wishlist-store";
 import { cn } from "@/lib/utils";

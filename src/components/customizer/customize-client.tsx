@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeftIcon as ArrowLeft,
-  CheckIcon as Check,
+  Check,
   ImageIcon as ImageUp,
-  RotateCounterClockwiseIcon as RotateCcw,
-  BoxIcon as ShoppingBag,
-} from "@radix-ui/react-icons";
+  RotateCcw,
+  ShoppingBag,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {

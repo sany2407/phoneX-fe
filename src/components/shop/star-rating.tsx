@@ -1,4 +1,4 @@
-import { StarFilledIcon, StarIcon } from "@radix-ui/react-icons";
+import { Star, StarOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function StarRating({
@@ -24,21 +24,21 @@ export function StarRating({
       >
         {Array.from({ length: 5 }, (_, i) => {
           if (i < full) {
-            return <StarFilledIcon key={i} className={px} aria-hidden="true" />;
+            return <Star key={i} className={px} aria-hidden="true" />;
           }
           // Radix has no half-star glyph: clip a full star to its left half.
           if (i === full && half) {
             return (
               <span key={i} className="relative inline-flex" aria-hidden="true">
-                <StarIcon className={cn(px, "text-muted-foreground/40")} />
+                <StarOff className={cn(px, "text-muted-foreground/40")} />
                 <span className="absolute inset-y-0 left-0 w-1/2 overflow-hidden">
-                  <StarFilledIcon className={px} />
+                  <Star className={px} />
                 </span>
               </span>
             );
           }
           return (
-            <StarIcon
+            <StarOff
               key={i}
               className={cn(px, "text-muted-foreground/40")}
               aria-hidden="true"

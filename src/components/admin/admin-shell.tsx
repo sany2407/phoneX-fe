@@ -4,23 +4,23 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";import {
   BarChartIcon as BarChart3,
-  CardStackIcon as Box,
+  Box,
   ChevronLeftIcon as ChevronLeft,
   ClipboardIcon as ClipboardList,
-  CubeIcon as Cpu,
-  DashboardIcon as LayoutDashboard,
-  ExitIcon as LogOut,
-  HamburgerMenuIcon as Menu,
-  ChatBubbleIcon as MessageSquare,
+  Cpu,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquare,
   BoxIcon as Package,
-  ColorWheelIcon as Palette,
-  TokensIcon as Percent,
-  ViewGridIcon as Shapes,
-  LockClosedIcon as ShieldCheck,
-  ValueIcon as Tag,
-  GroupIcon as Users,
-  Cross2Icon as X,
-} from "@radix-ui/react-icons";
+  Palette,
+  Percent,
+  Shapes,
+  ShieldCheck,
+  Tag,
+  Users,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/stores/auth-store";

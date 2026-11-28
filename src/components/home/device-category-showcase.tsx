@@ -1,15 +1,15 @@
 import Link from "next/link";
 import type { ElementType } from "react";
 import {
-  ArrowRightIcon as ArrowRight,
-  CubeIcon as Cpu,
-  FrameIcon as Tablet,
+  ArrowRight as ArrowRight,
+  Cpu,
+  Tablet,
   LaptopIcon as Laptop,
-  MagicWandIcon as Sparkles,
-  MobileIcon as Phone,
-  SpeakerLoudIcon as Earbuds,
-  StopwatchIcon as Watch,
-} from "@radix-ui/react-icons";
+  Sparkles,
+  Smartphone as Phone,
+  Headphones as Earbuds,
+  Clock as Watch,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { devicesService } from "@/lib/services/devices.service";

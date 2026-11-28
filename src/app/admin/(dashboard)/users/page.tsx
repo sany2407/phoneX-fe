@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  ReloadIcon as RefreshCw,
-  MagnifyingGlassIcon as Search,
-  LockClosedIcon as Shield,
-  PersonIcon as UserRound,
-  GroupIcon as Users,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  Search,
+  Shield,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/lib/services/admin.service";
 import type { AdminUserListItem } from "@/lib/api-types";

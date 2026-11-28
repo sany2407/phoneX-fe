@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowTopRightIcon as ArrowUpRight,
+  ArrowUpRight,
   ClipboardIcon as ClipboardList,
-  TokensIcon as DollarSign,
+  DollarSign,
   BoxIcon as Package,
   BackpackIcon as ShoppingCart,
-  ArrowTopRightIcon as TrendingUp,
-  GroupIcon as Users,
-} from "@radix-ui/react-icons";
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { adminService } from "@/lib/services/admin.service";
 import type {
   DashboardStats,

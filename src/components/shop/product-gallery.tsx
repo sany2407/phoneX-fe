@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ImageIcon as ImageOff } from "@radix-ui/react-icons";
+import { ImageOff } from "lucide-react";
 import { DevicePhoto } from "@/components/device/device-photo";
 import { cn } from "@/lib/utils";
 

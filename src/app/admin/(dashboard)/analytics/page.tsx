@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import {
   BarChartIcon as BarChart3,
-  ReloadIcon as RefreshCw,
-  ArrowTopRightIcon as TrendingUp,
-  GroupIcon as Users,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { adminService } from "@/lib/services/admin.service";
 import type { SalesDataPoint, CustomerSignupDataPoint, TopProduct } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/skeleton";

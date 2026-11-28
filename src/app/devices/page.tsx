@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ArrowRightIcon as ArrowRight,
-  CubeIcon as Cpu,
-  SpeakerLoudIcon as Headphones,
+  ArrowRight as ArrowRight,
+  Cpu,
+  Headphones,
   LaptopIcon as Laptop,
-  MobileIcon as Smartphone,
-  FrameIcon as Tablet,
-  StopwatchIcon as Watch,
-} from "@radix-ui/react-icons";
+  Smartphone,
+  Tablet,
+  Clock as Watch,
+} from "lucide-react";
 import { DeviceCard } from "@/components/device/device-card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { devicesService } from "@/lib/services/devices.service";

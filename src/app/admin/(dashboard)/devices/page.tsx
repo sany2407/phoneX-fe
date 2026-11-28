@@ -2,21 +2,21 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  ChevronDownIcon as ChevronDown,
-  ChevronRightIcon as ChevronRight,
-  CubeIcon as Cpu,
-  SpeakerLoudIcon as Headphones,
+  ChevronDown as ChevronDown,
+  ChevronRight,
+  Cpu,
+  Headphones,
   LaptopIcon as Laptop,
-  Pencil2Icon as Pencil,
+  Pencil,
   PlusIcon as Plus,
-  ReloadIcon as RefreshCw,
-  MagnifyingGlassIcon as Search,
-  MobileIcon as Smartphone,
-  FrameIcon as Tablet,
-  TrashIcon as Trash2,
-  StopwatchIcon as Watch,
-  Cross2Icon as X,
-} from "@radix-ui/react-icons";
+  Loader2 as RefreshCw,
+  Search,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Clock as Watch,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   adminService,
